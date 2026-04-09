@@ -1,6 +1,9 @@
-﻿import { BrowserRouter, Routes, Route } from "react-router-dom";
+﻿import { useContext } from "react";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 import { AuthProvider } from "./context/AuthContext";
+import { AuthContext } from "./context/AuthContext";
+import { SocketProvider } from "./context/SocketContext";
 import { ProtectedRoute } from "./routes/ProtectedRoute";
 
 import Navbar from "./components/Navbar";
@@ -12,16 +15,21 @@ import JobBoard from "./pages/JobBoard";
 import JobDetail from "./pages/JobDetail";
 import Profile from "./pages/Profile";
 import EditProfile from "./pages/EditProfile";
+import Onboarding from "./pages/Onboarding";
 import AdminDashboard from "./pages/AdminDashboard";
-import EmployeeDashboard from "./pages/EmployeeDashboard";
+import EmployerDashboard from "./pages/EmployerDashboard";
 import EmployeeRegister from "./pages/EmployeeRegister";
 import PostJob from "./pages/PostJob";
+import Messages from "./pages/Messages";
 
 import "./styles/style.css";
 
-function App() {
+function AppRoutes() {
+  const { user } = useContext(AuthContext);
+  const userId = user?._id || user?.id;
+
   return (
-    <AuthProvider>
+    <SocketProvider userId={userId}>
       <BrowserRouter>
         <Navbar />
         <Routes>
@@ -29,6 +37,8 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
           <Route path="/register-employer" element={<EmployeeRegister />} />
+          <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
+          <Route path="/messages" element={<ProtectedRoute><Messages /></ProtectedRoute>} />
           <Route path="/profile" element={<ProtectedRoute><Profile /></ProtectedRoute>} />
           <Route path="/profile/edit" element={<ProtectedRoute><EditProfile /></ProtectedRoute>} />
           <Route path="/dashboard" element={<ProtectedRoute requiredRole="resident"><Dashboard /></ProtectedRoute>} />
@@ -36,9 +46,17 @@ function App() {
           <Route path="/jobs/:id" element={<ProtectedRoute requiredRole="resident"><JobDetail /></ProtectedRoute>} />
           <Route path="/post-job" element={<ProtectedRoute requiredRole="employer"><PostJob /></ProtectedRoute>} />
           <Route path="/admin" element={<ProtectedRoute requiredRole="admin"><AdminDashboard /></ProtectedRoute>} />
-          <Route path="/employer" element={<ProtectedRoute requiredRole="employer"><EmployeeDashboard /></ProtectedRoute>} />
+          <Route path="/employer" element={<ProtectedRoute requiredRole="employer"><EmployerDashboard /></ProtectedRoute>} />
         </Routes>
       </BrowserRouter>
+    </SocketProvider>
+  );
+}
+
+function App() {
+  return (
+    <AuthProvider>
+      <AppRoutes />
     </AuthProvider>
   );
 }

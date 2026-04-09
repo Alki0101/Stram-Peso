@@ -41,7 +41,7 @@
 /* View profile card */
 .profile-view-card {
   width: 100%;
-  max-width: 980px;
+  max-width: 680px;
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
@@ -107,22 +107,10 @@
   padding-top: 1rem;
 }
 
-.profile-view-section:nth-of-type(1),
-.profile-view-section:nth-of-type(2) {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  column-gap: 2rem;
-}
-
-.profile-view-section:nth-of-type(1) h2,
-.profile-view-section:nth-of-type(2) h2 {
-  grid-column: 1 / -1;
-}
-
 .profile-view-section h2,
 .profile-section-divider {
   margin: 0 0 0.9rem;
-  font-size: 13px;
+  font-size: 12px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
   color: #6b7280;
@@ -181,6 +169,93 @@
   font-weight: 700;
 }
 
+.profile-role-employer {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.45rem;
+  padding: 0.24rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid #86efac;
+  background: #f0fdf4;
+  color: #166534;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.profile-inline-link {
+  color: #16a34a;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.profile-inline-link:hover {
+  text-decoration: underline;
+}
+
+.profile-company-description {
+  margin: 0;
+  color: #334155;
+  line-height: 1.65;
+}
+
+.profile-company-description--empty {
+  color: #64748b;
+}
+
+.profile-stats-row {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.7rem;
+}
+
+.profile-stat-card {
+  background: #f0fdf4;
+  border-radius: 10px;
+  padding: 16px;
+  border: 1px solid #dcfce7;
+}
+
+.profile-stat-card strong {
+  display: block;
+  color: #16a34a;
+  font-size: 1.75rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.profile-stat-card span {
+  display: block;
+  margin-top: 0.42rem;
+  color: #6b7280;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.profile-verification-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  padding: 0.24rem 0.62rem;
+}
+
+.profile-verification-badge.unverified {
+  background: #f1f5f9;
+  color: #64748b;
+}
+
+.profile-verification-badge.pending {
+  background: #fef3c7;
+  color: #b45309;
+}
+
+.profile-verification-badge.verified {
+  background: #dcfce7;
+  color: #166534;
+}
+
 .profile-missing {
   color: #94a3b8;
   font-style: italic;
@@ -211,7 +286,7 @@
 /* Edit profile card */
 .profile-form-card {
   width: 100%;
-  max-width: 760px;
+  max-width: 680px;
   background: #ffffff;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
@@ -395,6 +470,161 @@
   background: #12813a;
 }
 
+.danger-zone-section {
+  margin-top: 1.35rem;
+}
+
+.danger-zone-divider {
+  height: 1px;
+  background: linear-gradient(90deg, rgba(239, 68, 68, 0.15), rgba(239, 68, 68, 0.5), rgba(239, 68, 68, 0.15));
+  margin-bottom: 0.95rem;
+}
+
+.danger-zone-label {
+  margin: 0;
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #ef4444;
+  font-weight: 700;
+}
+
+.danger-zone-description {
+  margin: 0.5rem 0 0.9rem;
+  color: #6b7280;
+  font-size: 0.9rem;
+  line-height: 1.55;
+}
+
+.danger-zone-delete-btn {
+  border: 1.5px solid #ef4444;
+  color: #ef4444;
+  background: #ffffff;
+  border-radius: 8px;
+  padding: 10px 24px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.danger-zone-delete-btn:hover {
+  background: #ef4444;
+  color: #ffffff;
+}
+
+.delete-account-modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1400;
+  padding: 1rem;
+}
+
+.delete-account-modal {
+  background: #ffffff;
+  border-radius: 12px;
+  padding: 32px;
+  max-width: 440px;
+  width: 90%;
+}
+
+.delete-warning-icon {
+  color: #ef4444;
+  font-size: 40px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.delete-account-modal h3 {
+  margin: 0.45rem 0 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.delete-account-modal p {
+  margin: 10px 0 0;
+  font-size: 14px;
+  color: #6b7280;
+  line-height: 1.55;
+}
+
+.delete-confirm-label {
+  display: block;
+  margin-top: 1rem;
+  color: #374151;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+
+.delete-confirm-input {
+  width: 100%;
+  margin-top: 0.5rem;
+  border: 1.5px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 10px 12px;
+  font-size: 0.92rem;
+  color: #1e293b;
+  outline: none;
+}
+
+.delete-confirm-input:focus {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.14);
+}
+
+.delete-modal-error {
+  margin-top: 0.75rem;
+  color: #b42318;
+  font-size: 0.85rem;
+}
+
+.delete-account-modal-actions {
+  margin-top: 1.1rem;
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.65rem;
+}
+
+.delete-cancel-btn,
+.delete-confirm-btn {
+  border-radius: 8px;
+  padding: 10px 24px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.delete-cancel-btn {
+  border: 1.5px solid #e5e7eb;
+  background: #ffffff;
+  color: #374151;
+}
+
+.delete-cancel-btn:hover:not(:disabled) {
+  background: #f9fafb;
+}
+
+.delete-confirm-btn {
+  border: 1.5px solid #ef4444;
+  background: #ef4444;
+  color: #ffffff;
+}
+
+.delete-confirm-btn:hover:not(:disabled) {
+  background: #dc2626;
+  border-color: #dc2626;
+}
+
+.delete-confirm-btn:disabled {
+  background: #fca5a5;
+  border-color: #fca5a5;
+  cursor: not-allowed;
+}
+
 .success-message {
   background: #ecfdf3;
   color: #166534;
@@ -438,14 +668,13 @@
     align-items: flex-start;
   }
 
-  .profile-view-section:nth-of-type(1),
-  .profile-view-section:nth-of-type(2) {
-    display: block;
-  }
-
   .profile-detail-row strong,
   .profile-skills-list {
     text-align: left;
     justify-content: flex-start;
+  }
+
+  .profile-stats-row {
+    grid-template-columns: 1fr;
   }
 }

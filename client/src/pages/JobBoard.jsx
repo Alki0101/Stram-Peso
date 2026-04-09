@@ -13,6 +13,8 @@ export default function JobBoard() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedJob, setSelectedJob] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedEmployer, setSelectedEmployer] = useState(null);
+  const [isEmployerModalOpen, setIsEmployerModalOpen] = useState(false);
   const [applications, setApplications] = useState([]);
   const [viewingApplication, setViewingApplication] = useState(null);
   const [editingApplication, setEditingApplication] = useState(null);
@@ -61,6 +63,13 @@ export default function JobBoard() {
     navigate(`/jobs/${jobId}`);
   };
 
+  const handleViewEmployer = (job) => {
+    const employer = job?.employer;
+    if (!employer || typeof employer !== "object") return;
+    setSelectedEmployer(employer);
+    setIsEmployerModalOpen(true);
+  };
+
   const getStatusClassName = (status) => {
     const normalized = String(status || "").toLowerCase();
     if (normalized === "open") return "status-open";
@@ -82,6 +91,20 @@ export default function JobBoard() {
     if (!resumePath) return null;
     const sanitized = String(resumePath).replace(/\\/g, "/");
     return `http://localhost:3000/${sanitized}`;
+  };
+
+  const getEmployerDisplay = (employer) => {
+    if (!employer || typeof employer !== "object") {
+      return {
+        accountName: "Unknown",
+        companyName: "No company name",
+      };
+    }
+
+    return {
+      accountName: employer.name || "Unknown",
+      companyName: employer.companyName || "No company name",
+    };
   };
 
   const handleOpenEditModal = (application) => {
@@ -191,6 +214,7 @@ export default function JobBoard() {
                   <div className="report-actions">
                     <button className="btn-view" onClick={() => handleViewJob(job)}>View Job</button>
                     <button className="btn-edit" onClick={() => handleApplyJob(job._id)}>Apply</button>
+                    <button className="btn-employer-profile" onClick={() => handleViewEmployer(job)}>View Employer</button>
                   </div>
                 </div>
               ))}
@@ -211,9 +235,15 @@ export default function JobBoard() {
                   </div>
                   <p className="report-location">📍 {application.vacancy?.location}</p>
                   <p className="report-footer employer-line">
-                    Employer:
+                    Employer Account:
                     <span className={application.vacancy?.employer?.name ? "employer-name" : "employer-name employer-name--unknown"}>
-                      {application.vacancy?.employer?.name || "Unknown"}
+                      {getEmployerDisplay(application.vacancy?.employer).accountName}
+                    </span>
+                  </p>
+                  <p className="report-footer employer-line">
+                    Company:
+                    <span className={application.vacancy?.employer?.companyName ? "employer-name" : "employer-name employer-name--unknown"}>
+                      {getEmployerDisplay(application.vacancy?.employer).companyName}
                     </span>
                   </p>
 
@@ -278,6 +308,26 @@ export default function JobBoard() {
       />
 
       <AppModal
+        isOpen={isEmployerModalOpen}
+        onClose={() => setIsEmployerModalOpen(false)}
+        title="Employer Profile"
+      >
+        {selectedEmployer && (
+          <div className="application-modal-content">
+            <p><strong>Employer Account:</strong> {selectedEmployer.name || "Unknown"}</p>
+            <p><strong>Company Name:</strong> {selectedEmployer.companyName || "No company name"}</p>
+            <p><strong>Email:</strong> {selectedEmployer.email || "Not provided"}</p>
+            <p><strong>Phone:</strong> {selectedEmployer.phone || "Not provided"}</p>
+            <p><strong>Industry:</strong> {selectedEmployer.industry || "Not provided"}</p>
+            <p><strong>Company Size:</strong> {selectedEmployer.companySize || "Not provided"}</p>
+            <p><strong>Business Address:</strong> {selectedEmployer.businessAddress || "Not provided"}</p>
+            <p><strong>Website:</strong> {selectedEmployer.website || "Not provided"}</p>
+            <p><strong>Description:</strong> {selectedEmployer.companyDescription || "No company description available."}</p>
+          </div>
+        )}
+      </AppModal>
+
+      <AppModal
         isOpen={Boolean(viewingApplication)}
         onClose={() => setViewingApplication(null)}
         title="Application Details"
@@ -285,7 +335,8 @@ export default function JobBoard() {
         {viewingApplication && (
           <div className="application-modal-content">
             <p><strong>Job Title:</strong> {viewingApplication.vacancy?.title || "N/A"}</p>
-            <p><strong>Company:</strong> {viewingApplication.vacancy?.employer?.name || "Unknown"}</p>
+            <p><strong>Employer Account:</strong> {getEmployerDisplay(viewingApplication.vacancy?.employer).accountName}</p>
+            <p><strong>Company:</strong> {getEmployerDisplay(viewingApplication.vacancy?.employer).companyName}</p>
             <p><strong>Location:</strong> {viewingApplication.vacancy?.location || "N/A"}</p>
             <p>
               <strong>Status:</strong>{" "}
@@ -294,6 +345,19 @@ export default function JobBoard() {
               </span>
             </p>
             <p><strong>Cover Letter:</strong> {viewingApplication.coverLetter || "No cover letter submitted."}</p>
+            <div className="employer-note-box">
+              <p>
+                <strong>Employer Note:</strong>{" "}
+                {viewingApplication.employerNote
+                  ? viewingApplication.employerNote
+                  : "No note from employer yet."}
+              </p>
+              {viewingApplication.statusUpdatedAt ? (
+                <p className="employer-note-date">
+                  Last update: {formatAppliedDate(viewingApplication.statusUpdatedAt)}
+                </p>
+              ) : null}
+            </div>
             <p>
               <strong>Resume:</strong>{" "}
               {viewingApplication.resume ? (

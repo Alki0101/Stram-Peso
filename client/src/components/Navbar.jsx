@@ -1,17 +1,71 @@
-﻿import { useContext } from "react";
-import { Link, useNavigate } from "react-router-dom";
+﻿import { useContext, useEffect, useState } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
+import { messageAPI } from "../services/api";
+import { useSocket } from "../context/SocketContext";
 import "../styles/navbar.css";
 import pesoLogo from "../assets/images/peso-logo.png";
 
 export default function Navbar() {
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
+  const location = useLocation();
+  const socket = useSocket();
+  const [showLogoutModal, setShowLogoutModal] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
-  const handleLogout = () => {
+  const handleConfirmLogout = () => {
+    setShowLogoutModal(false);
     logout();
-    navigate("/");
+    navigate("/login");
   };
+
+  useEffect(() => {
+    const fetchUnreadCount = async () => {
+      if (!user) {
+        setUnreadCount(0);
+        return;
+      }
+
+      try {
+        const { data } = await messageAPI.getUnreadCount();
+        setUnreadCount(Number(data?.count || 0));
+      } catch (error) {
+        setUnreadCount(0);
+      }
+    };
+
+    fetchUnreadCount();
+  }, [user, location.pathname]);
+
+  useEffect(() => {
+    if (!socket || !user) return undefined;
+
+    const currentUserId = String(user._id || user.id);
+
+    const handleReceiveMessage = (message) => {
+      const senderId = String(message?.sender?._id || message?.sender || "");
+      if (!senderId || senderId === currentUserId) return;
+
+      if (location.pathname === "/messages") {
+        return;
+      }
+
+      setUnreadCount((prev) => prev + 1);
+    };
+
+    socket.on("receive_message", handleReceiveMessage);
+
+    return () => {
+      socket.off("receive_message", handleReceiveMessage);
+    };
+  }, [socket, user, location.pathname]);
+
+  useEffect(() => {
+    if (!user) {
+      setShowLogoutModal(false);
+    }
+  }, [user]);
 
   return (
     <nav className="navbar">
@@ -31,8 +85,12 @@ export default function Navbar() {
 
           {user ? (
             <>
-              <span className="user-name">👤 {user.name}</span>
-
+              <button type="button" className="user-pill-button" onClick={() => navigate("/messages")}>
+                <span className="user-name">👤 {user.name}</span>
+                {unreadCount > 0 && (
+                  <span className="user-unread-badge">{unreadCount > 9 ? "9+" : unreadCount}</span>
+                )}
+              </button>
               {user.role === "admin" && <Link to="/admin">Admin Dashboard</Link>}
 
               {user.role === "employer" && (
@@ -50,7 +108,7 @@ export default function Navbar() {
               )}
 
               <Link to="/profile">Profile</Link>
-              <button className="logout-btn" onClick={handleLogout}>
+              <button className="logout-btn" onClick={() => setShowLogoutModal(true)}>
                 Logout
               </button>
             </>
@@ -63,6 +121,23 @@ export default function Navbar() {
           )}
         </div>
       </div>
+
+      {showLogoutModal && (
+        <div className="logout-modal-overlay" onClick={() => setShowLogoutModal(false)}>
+          <div className="logout-modal" onClick={(event) => event.stopPropagation()}>
+            <h3>Log out of STRAM PESO?</h3>
+            <p>You will need to sign in again to access your account.</p>
+            <div className="logout-modal-actions">
+              <button type="button" className="logout-cancel-btn" onClick={() => setShowLogoutModal(false)}>
+                Cancel
+              </button>
+              <button type="button" className="logout-confirm-btn" onClick={handleConfirmLogout}>
+                Log Out
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </nav>
   );
 }

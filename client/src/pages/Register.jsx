@@ -1,5 +1,6 @@
-﻿import { useState } from "react";
+﻿import { useState, useContext } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { AuthContext } from "../context/AuthContext";
 import { authAPI } from "../services/api";
 import "../styles/auth.css";
 
@@ -11,6 +12,7 @@ export default function Register() {
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const { login } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -23,9 +25,29 @@ export default function Register() {
     setError("");
 
     try {
-      await authAPI.register(formData);
-      alert("Account created successfully! Please login.");
-      navigate("/login");
+      const registerResponse = await authAPI.register(formData);
+      const registeredOnboardingComplete = registerResponse.data?.onboardingComplete;
+
+      const { data: loginResponse } = await authAPI.login({
+        email: formData.email,
+        password: formData.password,
+      });
+
+      login(loginResponse.token, loginResponse.user);
+
+      const profileResponse = await authAPI.getProfile();
+      const mergedUser = {
+        ...loginResponse.user,
+        ...profileResponse.data,
+      };
+
+      login(loginResponse.token, mergedUser);
+
+      if (registeredOnboardingComplete === false || mergedUser.onboardingComplete === false) {
+        navigate("/onboarding");
+      } else {
+        navigate("/dashboard");
+      }
     } catch (err) {
       setError(err.response?.data?.message || "Registration failed");
     } finally {

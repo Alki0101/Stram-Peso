@@ -5,12 +5,14 @@ const {
     register, 
     login, 
     getMe, 
+  getProfile,
     updateProfile,
+    deleteAccount,
     registerEmployer, 
     generateInviteCode, 
     promoteToEmployer 
 } = require("../controllers/authController");
-const { verifyToken, isAdmin } = require("../middleware/auth");
+const { verifyToken: protect, isAdmin } = require("../middleware/auth");
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
@@ -30,12 +32,27 @@ const upload = multer({
   }
 });
 
+const profileUpload = multer({ dest: path.join(__dirname, "../uploads") });
+
 router.post("/register", register);
 router.post("/login", login);
-router.get("/me", verifyToken, getMe);
+router.get("/me", protect, getMe);
+router.get("/profile", protect, getProfile);
+router.put(
+  "/profile",
+  protect,
+  profileUpload.fields([
+    { name: "resumeFile", maxCount: 1 },
+    { name: "validIdFile", maxCount: 1 },
+    { name: "businessPermit", maxCount: 1 },
+    { name: "registrationDoc", maxCount: 1 },
+  ]),
+  updateProfile
+);
+router.delete("/profile", protect, deleteAccount);
 router.patch(
   "/me",
-  verifyToken,
+  protect,
   upload.fields([
     { name: "resume", maxCount: 1 },
     { name: "supportingDocument", maxCount: 1 },
@@ -44,7 +61,7 @@ router.patch(
 );
 
 router.post("/register/employer", registerEmployer);
-router.post("/invite", verifyToken, isAdmin, generateInviteCode);
-router.patch("/promote/:userId", verifyToken, isAdmin, promoteToEmployer);
+router.post("/invite", protect, isAdmin, generateInviteCode);
+router.patch("/promote/:userId", protect, isAdmin, promoteToEmployer);
 
 module.exports = router;

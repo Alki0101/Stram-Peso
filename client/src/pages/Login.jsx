@@ -29,6 +29,20 @@ export default function Login() {
     try {
       const { data } = await authAPI.login(formData);
       login(data.token, data.user);
+
+      const profileResponse = await authAPI.getProfile();
+      const mergedUser = {
+        ...data.user,
+        ...profileResponse.data,
+      };
+
+      login(data.token, mergedUser);
+
+      if (mergedUser.onboardingComplete === false) {
+        navigate("/onboarding");
+        return;
+      }
+
       if (data.user.role === "admin") {
         navigate("/admin");
       } else if (data.user.role === "employee") {

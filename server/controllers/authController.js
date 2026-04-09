@@ -2,6 +2,9 @@ const User = require("../models/User");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const InviteCode = require("../models/InviteCode");
+const JobApplication = require("../models/JobApplication");
+const fs = require("fs");
+const path = require("path");
 
 exports.register = async (req, res) => {
   const { name, email, password } = req.body;
@@ -17,7 +20,17 @@ exports.register = async (req, res) => {
       role: "resident",
     });
 
-    res.json({ message: "User registered successfully", user });
+    res.json({
+      message: "User registered successfully",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        onboardingComplete: false,
+      },
+      onboardingComplete: false,
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -62,17 +75,37 @@ exports.getMe = async (req, res) => {
   }
 };
 
+exports.getProfile = async (req, res) => {
+  try {
+    const userId = req.user._id || req.user.id;
+    const user = await User.findById(userId).select("-password");
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+    res.json(user);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
 exports.updateProfile = async (req, res) => {
   try {
+    const userId = req.user._id || req.user.id;
+    const currentUser = await User.findById(userId).select("role");
+
+    if (!currentUser) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
     if (req.body.email) {
-      const existing = await User.findOne({ email: req.body.email, _id: { $ne: req.user.id } });
+      const existing = await User.findOne({ email: req.body.email, _id: { $ne: userId } });
       if (existing) {
         return res.status(400).json({ message: "Email already exists" });
       }
     }
 
-    let parsedSkills = [];
-    if (req.body.skills) {
+    let parsedSkills;
+    if (req.body.skills !== undefined) {
       try {
         parsedSkills = JSON.parse(req.body.skills);
         if (!Array.isArray(parsedSkills)) {
@@ -89,33 +122,115 @@ exports.updateProfile = async (req, res) => {
     const updates = {
       name: req.body.name,
       email: req.body.email,
-      about: req.body.about,
       phone: req.body.phone,
-      address: req.body.address,
       dateOfBirth: req.body.dateOfBirth || null,
       gender: req.body.gender,
-      desiredJobTitle: req.body.desiredJobTitle,
-      skills: parsedSkills,
-      workExperience: req.body.workExperience,
-      educationalAttainment: req.body.educationalAttainment,
-      availabilityStatus: req.body.availabilityStatus,
     };
 
+    if (currentUser.role === "employer") {
+      updates.companyName = req.body.companyName;
+      updates.industry = req.body.industry;
+      updates.companySize = req.body.companySize;
+      updates.website = req.body.website;
+      updates.companyDescription = req.body.companyDescription;
+      updates.businessAddress = req.body.businessAddress;
+      updates.address = req.body.businessAddress;
+    } else {
+      updates.about = req.body.about;
+      updates.address = req.body.address;
+      updates.desiredJobTitle = req.body.desiredJobTitle;
+      updates.skills = parsedSkills;
+      updates.workExperience = req.body.workExperience;
+      updates.educationalAttainment = req.body.educationalAttainment;
+      updates.availabilityStatus = req.body.availabilityStatus;
+    }
+
+    if (req.files?.resumeFile?.[0]) {
+      updates.resumeFile = `uploads/${req.files.resumeFile[0].filename}`;
+    }
+
+    if (req.files?.validIdFile?.[0]) {
+      updates.validIdFile = `uploads/${req.files.validIdFile[0].filename}`;
+    }
+
+    if (req.files?.businessPermit?.[0]) {
+      updates.businessPermitUrl = `uploads/${req.files.businessPermit[0].filename}`;
+    }
+
+    if (req.files?.registrationDoc?.[0]) {
+      updates.registrationDocUrl = `uploads/${req.files.registrationDoc[0].filename}`;
+    }
+
     if (req.files?.resume?.[0]) {
-      updates.resume = `uploads/${req.files.resume[0].filename}`;
+      updates.resumeFile = `uploads/${req.files.resume[0].filename}`;
     }
 
     if (req.files?.supportingDocument?.[0]) {
-      updates.supportingDocument = `uploads/${req.files.supportingDocument[0].filename}`;
+      updates.validIdFile = `uploads/${req.files.supportingDocument[0].filename}`;
     }
 
-    const user = await User.findByIdAndUpdate(req.user.id, updates, {
+    if (
+      req.body.onboardingComplete === true ||
+      req.body.onboardingComplete === "true" ||
+      req.query.complete === "true"
+    ) {
+      updates.onboardingComplete = true;
+    }
+
+    const cleanUpdates = Object.fromEntries(
+      Object.entries(updates).filter(([, value]) => value !== undefined)
+    );
+
+    const user = await User.findByIdAndUpdate(userId, cleanUpdates, {
       new: true,
     }).select("-password");
 
     res.json({ message: "Profile updated", user });
   } catch (error) {
     res.status(500).json({ message: error.message });
+  }
+};
+
+exports.deleteAccount = async (req, res) => {
+  try {
+    const userId = req.user._id || req.user.id;
+    const user = await User.findById(userId);
+
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    const filesToDelete = [user.resumeFile, user.validIdFile].filter(Boolean);
+
+    await Promise.all(
+      filesToDelete.map(
+        (filePath) =>
+          new Promise((resolve) => {
+            const normalizedPath = filePath.replace(/^\/+/, "").replace(/\\/g, "/");
+            const fileName = normalizedPath.split("/").pop();
+            if (!fileName) {
+              resolve();
+              return;
+            }
+
+            const absolutePath = path.join(__dirname, "..", "uploads", fileName);
+            fs.unlink(absolutePath, (err) => {
+              // Ignore missing files so account deletion can proceed.
+              if (err && err.code !== "ENOENT") {
+                console.error("Failed to remove upload:", absolutePath, err.message);
+              }
+              resolve();
+            });
+          })
+      )
+    );
+
+    await JobApplication.deleteMany({ applicant: userId });
+    await user.deleteOne();
+
+    return res.status(200).json({ message: "Account successfully deleted" });
+  } catch (error) {
+    return res.status(500).json({ message: "Failed to delete account" });
   }
 };
 

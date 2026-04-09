@@ -7,10 +7,23 @@ const jobApplicationSchema = new mongoose.Schema({
   coverLetter: { type: String, default: "", required: false },
   status: {
     type: String,
-    enum: ["Applied", "Reviewed", "Accepted", "Rejected"],
-    default: "Applied"
+    enum: [
+      "pending",
+      "reviewed",
+      "shortlisted",
+      "rejected",
+      "hired",
+      "Applied",
+      "Reviewed",
+      "Accepted",
+      "Rejected",
+    ],
+    default: "pending"
   },
-  appliedAt: { type: Date, default: Date.now }
+  employerNote: { type: String, default: "" },
+  statusUpdatedAt: { type: Date, default: null },
+  appliedAt: { type: Date, default: Date.now },
+  createdAt: { type: Date, default: Date.now },
 });
 
 module.exports = mongoose.model("JobApplication", jobApplicationSchema);

@@ -1,9 +1,10 @@
 import { useContext } from "react";
-import { Navigate } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 
 export const ProtectedRoute = ({ children, requiredRole }) => {
   const { user, token, loading } = useContext(AuthContext);
+  const location = useLocation();
 
   if (loading) {
     return null; // Or a spinner/loading indicator
@@ -11,6 +12,12 @@ export const ProtectedRoute = ({ children, requiredRole }) => {
 
   if (!token || !user) {
     return <Navigate to="/login" />;
+  }
+
+  const isJobseeker = user.role === "resident";
+
+  if (isJobseeker && user.onboardingComplete === false && location.pathname !== "/onboarding") {
+    return <Navigate to="/onboarding" replace />;
   }
 
   if (requiredRole && ![].concat(requiredRole).includes(user.role)) {

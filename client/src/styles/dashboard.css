@@ -440,22 +440,32 @@
 .brand-report-card .report-actions {
   display: flex;
   justify-content: space-between;
-  gap: 4%;
+  column-gap: 3%;
+  row-gap: 0.5rem;
   margin-top: auto;
-  padding-top: 1rem;
+  padding-top: 0.85rem;
   border-top: 1px solid #efefef;
-  flex-wrap: nowrap;
+  flex-wrap: wrap;
+}
+
+.brand-report-card .btn-view,
+.brand-report-card .btn-edit,
+.brand-report-card .btn-employer-profile {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  font-weight: 600;
+  min-height: 44px;
+  padding: 10px 12px;
+  line-height: 1.1;
+  font-size: 0.92rem;
 }
 
 .brand-report-card .btn-view,
 .brand-report-card .btn-edit {
-  width: 48%;
-  flex: 0 0 48%;
-  display: inline-block;
-  border-radius: 8px;
-  font-weight: 600;
-  padding: 10px 0;
-  font-size: 0.92rem;
+  width: 48.5%;
+  flex: 0 0 48.5%;
 }
 
 .brand-report-card .btn-view {
@@ -478,6 +488,19 @@
 .brand-report-card .btn-edit:hover {
   background: #d4881a;
   border-color: #d4881a;
+}
+
+.brand-report-card .btn-employer-profile {
+  width: 100%;
+  flex: 0 0 100%;
+  border: 2px solid #1d4ed8;
+  background: #ffffff;
+  color: #1d4ed8;
+}
+
+.brand-report-card .btn-employer-profile:hover {
+  background: #1d4ed8;
+  color: #ffffff;
 }
 
 .application-actions {
@@ -589,12 +612,14 @@
 
 .app-modal-card {
   width: 100%;
-  max-width: 600px;
+  max-width: 880px;
   background: #fff;
   border-radius: 12px;
   padding: 32px;
   position: relative;
   box-shadow: 0 20px 50px rgba(0, 0, 0, 0.25);
+  max-height: 88vh;
+  overflow-y: auto;
 }
 
 .app-modal-close {
@@ -621,6 +646,25 @@
   margin: 0.45rem 0;
   color: #444;
   line-height: 1.5;
+}
+
+.employer-note-box {
+  margin-top: 0.75rem;
+  padding: 0.75rem 0.85rem;
+  border-radius: 10px;
+  border: 1px solid #bbf7d0;
+  background: #f0fdf4;
+}
+
+.employer-note-box p {
+  margin: 0;
+  color: #14532d;
+}
+
+.employer-note-date {
+  margin-top: 0.35rem !important;
+  font-size: 0.8rem;
+  color: #166534;
 }
 
 .resume-link {
@@ -943,7 +987,8 @@
   }
 
   .brand-report-card .btn-view,
-  .brand-report-card .btn-edit {
+  .brand-report-card .btn-edit,
+  .brand-report-card .btn-employer-profile {
     width: 100%;
     flex: 0 0 100%;
   }

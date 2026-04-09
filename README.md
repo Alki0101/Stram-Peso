@@ -1,305 +1,178 @@
-# PowerWatch - Electrical Hazard Reporting System
+# PowerWacth Main
 
-A complete role-based web application for reporting electrical hazards to Marinduque Electric Cooperative.
+PowerWacth is a full-stack role-based job platform with separate experiences for job seekers, employers, and admins.
 
-## Features ⚡
+The system includes:
+- Account registration and login with JWT authentication
+- Job posting and job application workflows
+- Employer applicant management (status updates and notes)
+- Real-time and API-driven messaging between users
+- Role-aware profile and onboarding flows
 
-### For Residents
-- **User Registration & Login** with secure authentication
-- **Report Hazards** with title, location, description, and photo upload
-- **View My Reports** - Track all submitted hazard reports
-- **Real-time Status Updates** - See report status (Pending, In Progress, Resolved)
-- **Responsive Design** - Works on desktop and mobile
+## Tech Stack
 
-### For Admins
-- **Dashboard Statistics** - Total, pending, in-progress, and resolved reports
-- **View All Reports** - See all hazard reports from residents
-- **Filter Reports** - Filter by status (All, Pending, In Progress, Resolved)
-- **Update Status** - Change report status directly from dashboard
-- **Report Details** - View reporter info, location, description, and photos
+### Frontend
+- React (Vite)
+- React Router
+- Axios
+- Socket.IO Client
+- CSS
 
-## Tech Stack 🛠️
-
-**Backend:**
-- Node.js & Express.js
-- MongoDB with Mongoose
-- JWT for authentication
+### Backend
+- Node.js
+- Express
+- MongoDB + Mongoose
+- JWT authentication
 - Multer for file uploads
-- Bcryptjs for password hashing
+- Socket.IO
 
-**Frontend:**
-- React with React Router
-- Axios for API calls
-- CSS3 with responsive design
+## Repository Structure
 
-## Installation & Setup
-
-### Prerequisites
-- Node.js (v14+)
-- MongoDB instance (local or cloud)
-- npm or yarn
-
-### Backend Setup
-
-1. Navigate to the server directory:
-```bash
-cd server
-```
-
-2. Install dependencies:
-```bash
-npm install
-```
-
-3. Create a `.env` file in the server directory:
-```
-PORT=3000
-MONGO_URI=your_mongodb_connection_string
-JWT_SECRET=your_secret_key_here
-BASE_URI=/api/v1
-```
-
-4. Start the server:
-```bash
-npm run dev
-```
-
-The server will run on `http://localhost:3000`
-
-### Frontend Setup
-
-1. Navigate to the client directory:
-```bash
-cd ../client
-```
-
-2. Install dependencies:
-```bash
-npm install
-```
-
-3. Start the development server:
-```bash
-npm run dev
-```
-
-The frontend will run on `http://localhost:5173` (or another available port)
-
-## Database Schema
-
-### User Model
-```javascript
-{
-  name: String,
-  email: String,
-  password: String (hashed),
-  role: String (resident | admin)
-}
-```
-
-### HazardReport Model
-```javascript
-{
-  title: String,
-  description: String,
-  location: String,
-  image: String (file path),
-  status: String (Pending | In Progress | Resolved),
-  reportedBy: ObjectId (ref: User),
-  createdAt: Date
-}
-```
-
-## API Endpoints
-
-### Authentication
-- **POST** `/api/auth/register` - Register new user
-  - Body: `{name, email, password, role}`
-  
-- **POST** `/api/auth/login` - Login user
-  - Body: `{email, password}`
-  - Returns: `{token, user}`
-
-### Reports (Requires Authentication)
-- **POST** `/api/reports` - Create new report (FormData with image)
-  - Headers: `Authorization: Bearer {token}`
-  - Body: `{title, location, description, image}`
-
-- **GET** `/api/reports` - Get reports
-  - Headers: `Authorization: Bearer {token}`
-  - Residents get their reports, Admins get all reports
-
-- **PUT** `/api/reports/:id/status` - Update report status (Admin only)
-  - Headers: `Authorization: Bearer {token}`
-  - Body: `{status}`
+- client: React frontend
+- server: Express API and Socket.IO server
+- server/uploads: uploaded files (resumes, IDs, documents)
 
 ## User Roles
 
-### Resident
-- Can register and login
-- Can submit hazard reports with photo
-- Can only view their own reports
-- Can see report status updates
+- resident: job seeker
+- employer: company account that can post jobs and manage applicants
+- admin: system management role
+
+## Core Features
+
+### Resident (Job Seeker)
+- Register and login
+- Browse job listings
+- View job details
+- Apply to jobs with cover letter and resume
+- Update or withdraw own applications
+- View employer profile details from job cards
+- Access messaging inbox
+- Manage profile and onboarding details
+
+### Employer
+- Register as employer
+- Create, update, and close job postings
+- View applicants per job
+- Update applicant status with employer note
+- Access employer dashboard stats
+- Message applicants
+- Maintain employer profile and verification details
 
 ### Admin
-- Can login as admin
-- Can view all hazard reports
-- Can filter reports by status
-- Can update report status
-- Can view reporter details
+- View users
+- View analytics
+- Generate invite codes and promote users to employer
 
-## Usage Guide
+## API Overview
 
-### Creating an Account
+Base URL: http://localhost:3000/api
 
-1. Go to the home page
-2. Click "Register"
-3. Fill in your details:
-   - Full Name
-   - Email
-   - Password
-   - Account Type (select "Resident" for regular users)
-4. Click "Register"
-5. Login with your credentials
+### Auth
+- POST /auth/register
+- POST /auth/login
+- GET /auth/me
+- GET /auth/profile
+- PUT /auth/profile
+- DELETE /auth/profile
+- POST /auth/register/employer
+- POST /auth/invite (admin)
+- PATCH /auth/promote/:userId (admin)
 
-### Submitting a Hazard Report
+### Jobs
+- GET /jobs
+- GET /jobs/:id
+- POST /jobs (employer)
+- PUT /jobs/:id (employer)
+- DELETE /jobs/:id (employer)
+- POST /jobs/:id/apply (resident)
+- GET /jobs/applications/me (resident)
+- PUT /jobs/applications/:id (resident)
+- DELETE /jobs/applications/:id (resident)
+- GET /jobs/mine (employer)
 
-1. Login to your account
-2. Click "Report Hazard" or navigate to `/report`
-3. Fill in the form:
-   - **Hazard Title**: e.g., "Fallen Electric Post"
-   - **Location**: Provide specific location details
-   - **Description**: Detailed description of the hazard
-   - **Photo**: (Optional) Upload a photo of the hazard
-4. Click "Submit Report"
+### Employer
+- GET /employer/stats
+- GET /employer/profile-stats
+- GET /employer/jobs
+- POST /employer/jobs
+- PUT /employer/jobs/:id
+- DELETE /employer/jobs/:id
+- GET /employer/jobs/:jobId/applicants
+- PUT /employer/applications/:applicationId/status
 
-### Viewing Your Reports (Resident)
+### Messaging
+- POST /messages/conversations
+- GET /messages/conversations
+- GET /messages/conversations/:conversationId/messages
+- POST /messages/conversations/:conversationId/messages
+- DELETE /messages/conversations/:conversationId
+- GET /messages/unread-count
 
-1. Login to your account
-2. Click "My Reports" or navigate to `/dashboard`
-3. View all your submitted reports with their status
-4. Each report card shows:
-   - Title, location, description
-   - Current status (Pending/In Progress/Resolved)
-   - Uploaded photo (if any)
+### Admin
+- GET /admin/users
+- GET /admin/analytics
 
-### Using Admin Dashboard
+## Environment Variables
 
-1. Login as an admin account
-2. You'll be redirected to the admin dashboard
-3. View statistics and all submitted reports
-4. Use the filter buttons to view reports by status
-5. Click the status dropdown to update a report's status
+Create server/.env with:
 
-## File Upload
+PORT=3000
+MONGO_URI=your_mongodb_connection_string
+JWT_SECRET=your_jwt_secret
 
-- Supported formats: JPEG, JPG, PNG, GIF
-- Maximum file size: 10MB
-- Files are stored in `/server/uploads` directory
-- Images are served at `http://localhost:3000/uploads/filename`
+## Local Development
 
-## Security Features
+Open two terminals.
 
-- **Password Hashing**: Bcryptjs with 10 salt rounds
-- **JWT Authentication**: Secure token-based authentication
-- **Role-Based Authorization**: Middleware to protect routes
-- **File Validation**: Only image files allowed
-- **CORS Enabled**: Secure cross-origin requests
+### Terminal 1 (Backend)
+1. cd server
+2. npm install
+3. npm run dev
 
-## Project Structure
+### Terminal 2 (Frontend)
+1. cd client
+2. npm install
+3. npm run dev
 
-```
-powerwatch-system/
-├── server/
-│   ├── config/
-│   │   └── db.js
-│   ├── controllers/
-│   │   ├── authController.js
-│   │   └── reportController.js
-│   ├── middleware/
-│   │   └── auth.js
-│   ├── models/
-│   │   ├── User.js
-│   │   └── HazardReport.js
-│   ├── routes/
-│   │   ├── authRoutes.js
-│   │   └── reportRoutes.js
-│   ├── uploads/
-│   ├── .env
-│   ├── package.json
-│   └── server.js
-│
-├── client/
-│   ├── src/
-│   │   ├── components/
-│   │   │   └── Navbar.jsx
-│   │   ├── pages/
-│   │   │   ├── Home.jsx
-│   │   │   ├── Login.jsx
-│   │   │   ├── Register.jsx
-│   │   │   ├── Dashboard.jsx
-│   │   │   ├── ReportHazard.jsx
-│   │   │   └── AdminDashboard.jsx
-│   │   ├── routes/
-│   │   │   └── ProtectedRoute.jsx
-│   │   ├── context/
-│   │   │   └── AuthContext.jsx
-│   │   ├── services/
-│   │   │   └── api.js
-│   │   ├── styles/
-│   │   │   ├── style.css
-│   │   │   ├── navbar.css
-│   │   │   ├── auth.css
-│   │   │   ├── home.css
-│   │   │   ├── report.css
-│   │   │   ├── dashboard.css
-│   │   │   └── admin.css
-│   │   ├── App.jsx
-│   │   └── main.jsx
-│   └── package.json
-```
+Frontend default URL: http://localhost:5173
+Backend default URL: http://localhost:3000
+
+## Production Run
+
+### Backend
+1. cd server
+2. npm start
+
+### Frontend build
+1. cd client
+2. npm run build
+3. npm run preview
+
+## File Upload Notes
+
+- Upload destination: server/uploads
+- Accepted files include common document and image formats used by resume/profile flows
+- Max upload size is configured at 10MB in route middleware
 
 ## Troubleshooting
 
-### Port Already in Use
-If port 3000 is already in use:
-1. Update the `PORT` in `.env`
-2. Update the `API_URL` in `client/src/services/api.js`
+### Dashboard says "Failed to load dashboard content"
+- Confirm backend is running on port 3000
+- Confirm frontend is running on port 5173
+- Confirm token exists in local storage after login
+- Check that MONGO_URI and JWT_SECRET are set
 
-### Database Connection Error
-1. Verify MongoDB connection string in `.env`
-2. Ensure MongoDB is running
-3. Check if database is accessible
+### CORS issues
+- Backend allows origin http://localhost:5173
+- If frontend runs on a different port, update CORS config in server/server.js
 
-### File Upload Issues
-1. Ensure `/server/uploads` directory exists
-2. Check file size (max 10MB)
-3. Verify file format (JPEG, JPG, PNG, GIF only)
+### Empty jobs or applications
+- Verify logged-in account role
+- Verify data exists in MongoDB
+- Check API responses in browser network tab
 
-### CORS Errors
-- Backend CORS is already configured
-- Ensure frontend is running on a different port than backend
+## Notes
 
-## Future Enhancements
-
-- [ ] Email notifications for report updates
-- [ ] Hazard severity levels
-- [ ] Geolocation integration
-- [ ] Report commenting/discussion
-- [ ] Admin analytics and charts
-- [ ] Mobile app
-- [ ] Real-time notifications
-
-## License
-
-This project is licensed under the MIT License.
-
-## Support
-
-For issues or questions, please contact the development team.
-
----
-
-**Created for Marinduque Electric Cooperative**  
-**PowerWatch - Keep Communities Safe From Electrical Hazards** ⚡
-# PowerWacth
+- This README reflects the current code structure and routes in this repository.
+- If you add new modules (for example notifications), update this document to keep onboarding accurate.
