@@ -8,6 +8,7 @@ export default function EditProfile() {
   const { user, login, logout } = useContext(AuthContext);
   const navigate = useNavigate();
   const isEmployer = user?.role === "employer";
+  const isAdmin = user?.role === "admin";
 
   const [formData, setFormData] = useState({
     name: "",
@@ -41,6 +42,9 @@ export default function EditProfile() {
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [deleteConfirmName, setDeleteConfirmName] = useState("");
   const [deleteError, setDeleteError] = useState("");
@@ -134,10 +138,23 @@ export default function EditProfile() {
       data.append("name", formData.name);
       data.append("email", formData.email);
       data.append("phone", formData.phone);
-      data.append("dateOfBirth", formData.dateOfBirth);
-      data.append("gender", formData.gender);
 
-      if (isEmployer) {
+      if (isAdmin) {
+        if (currentPassword || newPassword || confirmPassword) {
+          if (!currentPassword || !newPassword) {
+            throw new Error("Current password and new password are required");
+          }
+
+          if (newPassword !== confirmPassword) {
+            throw new Error("New password and confirm password do not match");
+          }
+
+          data.append("currentPassword", currentPassword);
+          data.append("newPassword", newPassword);
+        }
+      } else if (isEmployer) {
+        data.append("dateOfBirth", formData.dateOfBirth);
+        data.append("gender", formData.gender);
         data.append("companyName", formData.companyName);
         data.append("industry", formData.industry);
         data.append("companySize", formData.companySize);
@@ -153,6 +170,8 @@ export default function EditProfile() {
           data.append("registrationDoc", registrationDocFile);
         }
       } else {
+        data.append("dateOfBirth", formData.dateOfBirth);
+        data.append("gender", formData.gender);
         data.append("about", formData.about);
         data.append("address", formData.address);
         data.append("desiredJobTitle", formData.desiredJobTitle);
@@ -172,9 +191,12 @@ export default function EditProfile() {
 
       const { data: response } = await authAPI.updateProfile(data);
       setMessage(response.message);
+      setCurrentPassword("");
+      setNewPassword("");
+      setConfirmPassword("");
       login(localStorage.getItem("token"), response.user);
     } catch (err) {
-      setError(err.response?.data?.message || "Failed to update profile");
+      setError(err.response?.data?.message || err.message || "Failed to update profile");
     } finally {
       setLoading(false);
     }
@@ -243,23 +265,63 @@ export default function EditProfile() {
             <input id="phone" type="text" name="phone" value={formData.phone} onChange={handleChange} />
           </div>
 
-          <div className="profile-field profile-field-grid">
-            <div>
-              <label htmlFor="dateOfBirth">Date of Birth</label>
-              <input id="dateOfBirth" type="date" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleChange} />
-            </div>
-            <div>
-              <label htmlFor="gender">Gender</label>
-              <select id="gender" name="gender" value={formData.gender} onChange={handleChange}>
-                <option value="">Select</option>
-                <option value="Male">Male</option>
-                <option value="Female">Female</option>
-                <option value="Prefer not to say">Prefer not to say</option>
-              </select>
-            </div>
-          </div>
+          {isAdmin ? (
+            <>
+              <div className="profile-section-divider">Password Change</div>
 
-          {isEmployer ? (
+              <div className="profile-field">
+                <label htmlFor="currentPassword">Current Password</label>
+                <input
+                  id="currentPassword"
+                  type="password"
+                  value={currentPassword}
+                  onChange={(event) => setCurrentPassword(event.target.value)}
+                  placeholder="Enter current password"
+                />
+              </div>
+
+              <div className="profile-field profile-field-grid">
+                <div>
+                  <label htmlFor="newPassword">New Password</label>
+                  <input
+                    id="newPassword"
+                    type="password"
+                    value={newPassword}
+                    onChange={(event) => setNewPassword(event.target.value)}
+                    placeholder="At least 8 characters"
+                  />
+                </div>
+                <div>
+                  <label htmlFor="confirmPassword">Confirm Password</label>
+                  <input
+                    id="confirmPassword"
+                    type="password"
+                    value={confirmPassword}
+                    onChange={(event) => setConfirmPassword(event.target.value)}
+                    placeholder="Re-enter new password"
+                  />
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="profile-field profile-field-grid">
+              <div>
+                <label htmlFor="dateOfBirth">Date of Birth</label>
+                <input id="dateOfBirth" type="date" name="dateOfBirth" value={formData.dateOfBirth} onChange={handleChange} />
+              </div>
+              <div>
+                <label htmlFor="gender">Gender</label>
+                <select id="gender" name="gender" value={formData.gender} onChange={handleChange}>
+                  <option value="">Select</option>
+                  <option value="Male">Male</option>
+                  <option value="Female">Female</option>
+                  <option value="Prefer not to say">Prefer not to say</option>
+                </select>
+              </div>
+            </div>
+          )}
+
+          {!isAdmin && isEmployer ? (
             <>
               <div className="profile-section-divider">Company Profile</div>
 
@@ -349,7 +411,7 @@ export default function EditProfile() {
                 </p>
               </div>
             </>
-          ) : (
+          ) : !isAdmin ? (
             <>
               <div className="profile-field">
                 <label htmlFor="address">Address</label>
@@ -464,7 +526,7 @@ export default function EditProfile() {
                 <p className="profile-file-name">{supportingDocumentFile ? supportingDocumentFile.name : existingValidId ? existingValidId.split("/").pop() : "No file selected"}</p>
               </div>
             </>
-          )}
+          ) : null}
         </div>
 
         <button type="submit" disabled={loading} className="profile-save-btn">

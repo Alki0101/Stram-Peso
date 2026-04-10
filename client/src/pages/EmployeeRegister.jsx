@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { authAPI } from "../services/api";
 import "../styles/auth.css";
 
@@ -42,45 +42,54 @@ export default function EmployerRegister() {
 
   return (
     <div className="auth-container">
-      <form className="auth-form" onSubmit={handleSubmit}>
-        <h2>Employer Register</h2>
+      <div className="auth-card">
+        <h2>Register as Employer</h2>
+        <p className="auth-subtitle">Create an employer account to post vacancies and manage applicants.</p>
+
         {error && <p className="error-message">{error}</p>}
-        <input
-          type="text"
-          name="name"
-          placeholder="Name"
-          value={formData.name}
-          onChange={handleChange}
-          required
-        />
-        <input
-          type="email"
-          name="email"
-          placeholder="Email"
-          value={formData.email}
-          onChange={handleChange}
-          required
-        />
-        <input
-          type="password"
-          name="password"
-          placeholder="Password"
-          value={formData.password}
-          onChange={handleChange}
-          required
-        />
-        <input
-          type="text"
-          name="inviteCode"
-          placeholder="Invite Code"
-          value={formData.inviteCode}
-          onChange={handleChange}
-          required
-        />
-        <button type="submit" disabled={loading}>
-          {loading ? "Registering..." : "Register"}
-        </button>
-      </form>
+
+        <form className="auth-form" onSubmit={handleSubmit}>
+          <input
+            type="text"
+            name="name"
+            placeholder="Name"
+            value={formData.name}
+            onChange={handleChange}
+            required
+          />
+          <input
+            type="email"
+            name="email"
+            placeholder="Email"
+            value={formData.email}
+            onChange={handleChange}
+            required
+          />
+          <input
+            type="password"
+            name="password"
+            placeholder="Password"
+            value={formData.password}
+            onChange={handleChange}
+            required
+          />
+          <input
+            type="text"
+            name="inviteCode"
+            placeholder="Invite Code"
+            value={formData.inviteCode}
+            onChange={handleChange}
+            required
+          />
+          <button type="submit" className="auth-button" disabled={loading}>
+            {loading ? "Registering..." : "Create Employer Account"}
+          </button>
+        </form>
+
+        <p className="auth-link">
+          Already have an account? <Link to="/login">Log in</Link>
+        </p>
+      </div>
     </div>
   );
 }

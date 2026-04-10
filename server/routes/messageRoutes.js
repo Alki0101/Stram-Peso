@@ -6,9 +6,11 @@ const {
   sendMessage,
   deleteConversation,
   getUnreadCount,
+  searchUsers,
 } = require("../controllers/messageController");
 const { verifyToken: protect } = require("../middleware/auth");
 
+router.get("/users/search", protect, searchUsers);
 router.post("/conversations", protect, createConversation);
 router.get("/conversations", protect, getConversations);
 router.get("/conversations/:conversationId/messages", protect, getMessages);

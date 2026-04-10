@@ -47,12 +47,19 @@ export const jobAPI = {
 };
 
 export const adminAPI = {
-  getUsers: () => axios.get(`${API_URL}/admin/users`, getAuthHeader()),
+  getUsers: (params = {}) => axios.get(`${API_URL}/admin/users`, { ...getAuthHeader(), params }),
   getAnalytics: () => axios.get(`${API_URL}/admin/analytics`, getAuthHeader()),
+  updateUserRole: (id, role) => axios.put(`${API_URL}/admin/users/${id}/role`, { role }, getAuthHeader()),
+  deactivateUser: (id) => axios.put(`${API_URL}/admin/users/${id}/deactivate`, {}, getAuthHeader()),
+  reactivateUser: (id) => axios.put(`${API_URL}/admin/users/${id}/reactivate`, {}, getAuthHeader()),
+  updateEmployerVerification: (id, verificationStatus) =>
+    axios.put(`${API_URL}/admin/users/${id}/verification`, { verificationStatus }, getAuthHeader()),
+  deleteUser: (id) => axios.delete(`${API_URL}/admin/users/${id}`, getAuthHeader()),
   generateInvite: () => axios.post(`${API_URL}/auth/invite`, {}, getAuthHeader()),
 };
 
 export const messageAPI = {
+  searchUsers: (query) => axios.get(`${API_URL}/messages/users/search`, { ...getAuthHeader(), params: { query } }),
   createConversation: (data) => axios.post(`${API_URL}/messages/conversations`, data, getAuthHeader()),
   getConversations: () => axios.get(`${API_URL}/messages/conversations`, getAuthHeader()),
   getMessages: (conversationId) => axios.get(`${API_URL}/messages/conversations/${conversationId}/messages`, getAuthHeader()),
@@ -70,5 +77,9 @@ export const employerAPI = {
   closeJob: (id) => axios.delete(`${API_URL}/employer/jobs/${id}`, getAuthHeader()),
   getApplicantsForJob: (jobId) => axios.get(`${API_URL}/employer/jobs/${jobId}/applicants`, getAuthHeader()),
   updateApplicationStatus: (applicationId, data) => axios.put(`${API_URL}/employer/applications/${applicationId}/status`, data, getAuthHeader()),
+};
+
+export const usersAPI = {
+  completeOnboarding: (data) => axios.put(`${API_URL}/users/onboarding`, data, getAuthHeader()),
 };
 

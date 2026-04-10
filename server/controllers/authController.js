@@ -6,6 +6,13 @@ const JobApplication = require("../models/JobApplication");
 const fs = require("fs");
 const path = require("path");
 
+const normalizeWorkExperience = (value) => {
+  if (!value) return value;
+  if (value === "1-3 years") return "1–3 years";
+  if (value === "3-5 years") return "3–5 years";
+  return value;
+};
+
 exports.register = async (req, res) => {
   const { name, email, password } = req.body;
   try {
@@ -20,15 +27,24 @@ exports.register = async (req, res) => {
       role: "resident",
     });
 
+    const token = jwt.sign(
+      { id: user._id, role: user.role },
+      process.env.JWT_SECRET,
+      { expiresIn: "30d" }
+    );
+
     res.json({
       message: "User registered successfully",
+      token,
       user: {
         id: user._id,
         name: user.name,
         email: user.email,
         role: user.role,
+        hasCompletedOnboarding: false,
         onboardingComplete: false,
       },
+      hasCompletedOnboarding: false,
       onboardingComplete: false,
     });
   } catch (error) {
@@ -41,6 +57,10 @@ exports.login = async (req, res) => {
   try {
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ message: "User not found" });
+
+    if (user.isActive === false) {
+      return res.status(403).json({ message: "Your account is deactivated. Please contact the administrator." });
+    }
 
     const match = await bcrypt.compare(password, user.password);
     if (!match) return res.status(400).json({ message: "Invalid password" });
@@ -57,7 +77,12 @@ exports.login = async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
-        role: user.role
+        role: user.role,
+        hasCompletedOnboarding:
+          typeof user.hasCompletedOnboarding === "boolean"
+            ? user.hasCompletedOnboarding
+            : Boolean(user.onboardingComplete),
+        onboardingComplete: Boolean(user.onboardingComplete),
       }
     });
   } catch (error) {
@@ -91,7 +116,7 @@ exports.getProfile = async (req, res) => {
 exports.updateProfile = async (req, res) => {
   try {
     const userId = req.user._id || req.user.id;
-    const currentUser = await User.findById(userId).select("role");
+    const currentUser = await User.findById(userId).select("role password");
 
     if (!currentUser) {
       return res.status(404).json({ message: "User not found" });
@@ -101,6 +126,19 @@ exports.updateProfile = async (req, res) => {
       const existing = await User.findOne({ email: req.body.email, _id: { $ne: userId } });
       if (existing) {
         return res.status(400).json({ message: "Email already exists" });
+      }
+    }
+
+    if (currentUser.role === "admin" && req.body.newPassword) {
+      const currentPassword = String(req.body.currentPassword || "");
+      const isCurrentValid = await bcrypt.compare(currentPassword, currentUser.password);
+
+      if (!isCurrentValid) {
+        return res.status(400).json({ message: "Current password is incorrect" });
+      }
+
+      if (String(req.body.newPassword).length < 8) {
+        return res.status(400).json({ message: "New password must be at least 8 characters long" });
       }
     }
 
@@ -127,7 +165,17 @@ exports.updateProfile = async (req, res) => {
       gender: req.body.gender,
     };
 
-    if (currentUser.role === "employer") {
+    if (currentUser.role === "admin") {
+      updates.dateOfBirth = undefined;
+      updates.gender = undefined;
+      updates.about = undefined;
+      updates.address = undefined;
+      updates.desiredJobTitle = undefined;
+      updates.skills = undefined;
+      updates.workExperience = undefined;
+      updates.educationalAttainment = undefined;
+      updates.availabilityStatus = undefined;
+    } else if (currentUser.role === "employer") {
       updates.companyName = req.body.companyName;
       updates.industry = req.body.industry;
       updates.companySize = req.body.companySize;
@@ -140,7 +188,7 @@ exports.updateProfile = async (req, res) => {
       updates.address = req.body.address;
       updates.desiredJobTitle = req.body.desiredJobTitle;
       updates.skills = parsedSkills;
-      updates.workExperience = req.body.workExperience;
+      updates.workExperience = normalizeWorkExperience(req.body.workExperience);
       updates.educationalAttainment = req.body.educationalAttainment;
       updates.availabilityStatus = req.body.availabilityStatus;
     }
@@ -174,7 +222,12 @@ exports.updateProfile = async (req, res) => {
       req.body.onboardingComplete === "true" ||
       req.query.complete === "true"
     ) {
+      updates.hasCompletedOnboarding = true;
       updates.onboardingComplete = true;
+    }
+
+    if (currentUser.role === "admin" && req.body.newPassword) {
+      updates.password = await bcrypt.hash(String(req.body.newPassword), 10);
     }
 
     const cleanUpdates = Object.fromEntries(

@@ -65,6 +65,8 @@ const userSchema = new mongoose.Schema({
   registrationDocUrl: { type: String, default: null },
   resumeFile: { type: String, default: null },
   validIdFile: { type: String, default: null },
+  isActive: { type: Boolean, default: true },
+  hasCompletedOnboarding: { type: Boolean, default: false },
   onboardingComplete: { type: Boolean, default: false },
   createdAt: { type: Date, default: Date.now }
 });

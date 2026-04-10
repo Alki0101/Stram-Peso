@@ -5,6 +5,8 @@ import { authAPI } from "../services/api";
 import "../styles/auth.css";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 
+const normalizeRole = (role) => (role === "employee" ? "resident" : role);
+
 export default function Login() {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
@@ -12,6 +14,12 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
+
+  const getDefaultRouteByRole = (role) => {
+    if (role === "admin") return "/admin";
+    if (role === "employer") return "/employer-dashboard";
+    return "/dashboard";
+  };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -34,22 +42,22 @@ export default function Login() {
       const mergedUser = {
         ...data.user,
         ...profileResponse.data,
+        role: normalizeRole(profileResponse.data?.role || data.user?.role),
       };
 
       login(data.token, mergedUser);
 
-      if (mergedUser.onboardingComplete === false) {
+      const hasCompletedOnboarding =
+        typeof mergedUser?.hasCompletedOnboarding === "boolean"
+          ? mergedUser.hasCompletedOnboarding
+          : mergedUser?.onboardingComplete;
+
+      if (["resident", "employer"].includes(mergedUser?.role) && hasCompletedOnboarding === false) {
         navigate("/onboarding");
         return;
       }
 
-      if (data.user.role === "admin") {
-        navigate("/admin");
-      } else if (data.user.role === "employee") {
-        navigate("/employee");
-      } else {
-        navigate("/dashboard");
-      }
+      navigate(getDefaultRouteByRole(mergedUser?.role));
     } catch (err) {
       setError(err.response?.data?.message || "Login failed");
     } finally {

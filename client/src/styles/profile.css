@@ -183,6 +183,20 @@
   font-weight: 700;
 }
 
+.profile-role-admin {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-top: 0.45rem;
+  padding: 0.24rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid #1e293b;
+  background: #1e293b;
+  color: #ffffff;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
 .profile-inline-link {
   color: #16a34a;
   font-weight: 700;

@@ -4,6 +4,8 @@ import { AuthContext } from "../context/AuthContext";
 import { authAPI } from "../services/api";
 import "../styles/auth.css";
 
+const normalizeRole = (role) => (role === "employee" ? "resident" : role);
+
 export default function Register() {
   const [formData, setFormData] = useState({
     name: "",
@@ -14,6 +16,12 @@ export default function Register() {
   const [loading, setLoading] = useState(false);
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
+
+  const getDefaultRouteByRole = (role) => {
+    if (role === "admin") return "/admin";
+    if (role === "employer") return "/employer-dashboard";
+    return "/dashboard";
+  };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
@@ -26,7 +34,10 @@ export default function Register() {
 
     try {
       const registerResponse = await authAPI.register(formData);
-      const registeredOnboardingComplete = registerResponse.data?.onboardingComplete;
+      const registeredHasCompletedOnboarding =
+        typeof registerResponse.data?.hasCompletedOnboarding === "boolean"
+          ? registerResponse.data.hasCompletedOnboarding
+          : registerResponse.data?.onboardingComplete;
 
       const { data: loginResponse } = await authAPI.login({
         email: formData.email,
@@ -39,14 +50,20 @@ export default function Register() {
       const mergedUser = {
         ...loginResponse.user,
         ...profileResponse.data,
+        role: normalizeRole(profileResponse.data?.role || loginResponse.user?.role),
       };
 
       login(loginResponse.token, mergedUser);
 
-      if (registeredOnboardingComplete === false || mergedUser.onboardingComplete === false) {
+      const mergedHasCompletedOnboarding =
+        typeof mergedUser?.hasCompletedOnboarding === "boolean"
+          ? mergedUser.hasCompletedOnboarding
+          : mergedUser?.onboardingComplete;
+
+      if (registeredHasCompletedOnboarding === false || mergedHasCompletedOnboarding === false) {
         navigate("/onboarding");
       } else {
-        navigate("/dashboard");
+        navigate(getDefaultRouteByRole(mergedUser?.role));
       }
     } catch (err) {
       setError(err.response?.data?.message || "Registration failed");

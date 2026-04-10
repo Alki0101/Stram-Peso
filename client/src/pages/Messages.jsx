@@ -67,6 +67,9 @@ export default function Messages() {
   const [draft, setDraft] = useState("");
   const [unreadByConversation, setUnreadByConversation] = useState({});
   const [typingUserId, setTypingUserId] = useState(null);
+  const [userSearchQuery, setUserSearchQuery] = useState("");
+  const [userSearchResults, setUserSearchResults] = useState([]);
+  const [searchingUsers, setSearchingUsers] = useState(false);
 
   const typingDebounceRef = useRef(null);
   const stopTypingTimerRef = useRef(null);
@@ -200,6 +203,40 @@ export default function Messages() {
       socket.off("user_stop_typing", onUserStopTyping);
     };
   }, [socket, currentUserId, selectedConversationId]);
+
+  useEffect(() => {
+    let active = true;
+    const term = userSearchQuery.trim();
+
+    if (term.length < 2) {
+      setUserSearchResults([]);
+      setSearchingUsers(false);
+      return undefined;
+    }
+
+    const timer = window.setTimeout(async () => {
+      setSearchingUsers(true);
+      try {
+        const { data } = await messageAPI.searchUsers(term);
+        if (!active) return;
+        setUserSearchResults(Array.isArray(data) ? data : []);
+        setError("");
+      } catch {
+        if (!active) return;
+        setUserSearchResults([]);
+        setError("Failed to search users");
+      } finally {
+        if (active) {
+          setSearchingUsers(false);
+        }
+      }
+    }, 300);
+
+    return () => {
+      active = false;
+      window.clearTimeout(timer);
+    };
+  }, [userSearchQuery]);
 
   const filteredConversations = useMemo(() => {
     const search = searchQuery.trim().toLowerCase();
@@ -356,12 +393,68 @@ export default function Messages() {
     return participant?.name || "Someone";
   }, [typingUserId, selectedConversation]);
 
+  const handleStartConversation = async (targetUser) => {
+    try {
+      const { data } = await messageAPI.createConversation({ participantId: targetUser._id });
+      const createdConversation = data;
+
+      setConversations((prev) => {
+        const exists = prev.some((item) => item._id === createdConversation._id);
+        if (exists) {
+          return prev.map((item) => (item._id === createdConversation._id ? createdConversation : item));
+        }
+        return [createdConversation, ...prev];
+      });
+
+      setSelectedConversationId(createdConversation._id);
+      setUserSearchQuery("");
+      setUserSearchResults([]);
+      setError("");
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to start conversation");
+    }
+  };
+
   return (
     <div className="messages-page">
       <section className="messages-layout">
         <aside className="messages-sidebar">
           <header className="messages-sidebar-header">
             <h1>Messages</h1>
+            <input
+              type="text"
+              placeholder="Find users/employers to message"
+              aria-label="Find users to message"
+              value={userSearchQuery}
+              onChange={(event) => setUserSearchQuery(event.target.value)}
+            />
+
+            {(userSearchQuery.trim().length >= 2 || searchingUsers) && (
+              <div className="messages-user-search-results">
+                {searchingUsers && <p className="messages-user-search-empty">Searching...</p>}
+
+                {!searchingUsers && userSearchResults.length === 0 && (
+                  <p className="messages-user-search-empty">No matching users found.</p>
+                )}
+
+                {!searchingUsers &&
+                  userSearchResults.map((item) => (
+                    <button
+                      key={item._id}
+                      type="button"
+                      className="messages-user-search-item"
+                      onClick={() => handleStartConversation(item)}
+                    >
+                      <span className="conversation-avatar">{(item.name || "U").trim().charAt(0).toUpperCase()}</span>
+                      <span className="messages-user-search-main">
+                        <strong>{item.name}</strong>
+                        <small>{item.role === "employer" ? item.companyName || item.email : item.desiredJobTitle || item.email}</small>
+                      </span>
+                    </button>
+                  ))}
+              </div>
+            )}
+
             <input
               type="text"
               placeholder="Search conversations"

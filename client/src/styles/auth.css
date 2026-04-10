@@ -1,12 +1,16 @@
 ﻿/* Auth Pages Styles (Login & Register) */
 .auth-container {
-  min-height: calc(100vh - 100px);
+  min-height: 100vh;
   display: flex;
   justify-content: center;
   align-items: center;
-  background: url('../assets/images/capitolboac.jpg') center center / cover no-repeat;
-  padding: 0 1rem 1.5rem;
-  padding-top: 100px;
+  background-image: linear-gradient(rgba(15, 23, 42, 0.5), rgba(15, 23, 42, 0.5)), url('../assets/images/capitolboac.jpg');
+  background-position: center center;
+  background-size: cover;
+  background-repeat: no-repeat;
+  background-attachment: fixed;
+  background-color: #0f172a;
+  padding: 104px 1rem 2rem;
   box-sizing: border-box;
 }
 
@@ -294,9 +298,9 @@
 
 @media (max-width: 640px) {
   .auth-container {
-    padding-top: 110px;
-    min-height: calc(100vh - 110px);
-    padding: 1rem;
+    min-height: 100vh;
+    padding: 98px 0.95rem 1.25rem;
+    background-attachment: scroll;
   }
 
   .auth-card {

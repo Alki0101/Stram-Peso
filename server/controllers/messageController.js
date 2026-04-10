@@ -1,7 +1,33 @@
 const Conversation = require("../models/Conversation");
 const Message = require("../models/Message");
+const User = require("../models/User");
 
 const getUserId = (req) => req.user._id || req.user.id;
+const ACTIVE_USER_FILTER = { $ne: false };
+
+const normalizeRole = (role) => {
+  const value = String(role || "").toLowerCase();
+  if (value === "employee") return "resident";
+  return value;
+};
+
+const getAllowedSearchRoles = (role) => {
+  const normalized = normalizeRole(role);
+  if (normalized === "admin") return ["resident", "employee", "employer", "admin"];
+  if (normalized === "employer") return ["resident", "employee"];
+  if (normalized === "resident") return ["employer"];
+  return [];
+};
+
+const canMessageTarget = (sourceRole, targetRole) => {
+  const source = normalizeRole(sourceRole);
+  const target = normalizeRole(targetRole);
+
+  if (source === "admin") return ["resident", "employer", "admin"].includes(target);
+  if (source === "resident") return target === "employer";
+  if (source === "employer") return target === "resident";
+  return false;
+};
 
 const ensureConversationBetweenUsers = async (userA, userB) => {
   const existing = await Conversation.findOne({
@@ -30,6 +56,23 @@ exports.createConversation = async (req, res) => {
       return res.status(400).json({ message: "Cannot create conversation with yourself" });
     }
 
+    const [currentUser, targetUser] = await Promise.all([
+      User.findById(userId).select("role isActive"),
+      User.findById(participantId).select("role isActive name"),
+    ]);
+
+    if (!currentUser || currentUser.isActive === false) {
+      return res.status(403).json({ message: "Current account is not allowed to message" });
+    }
+
+    if (!targetUser || targetUser.isActive === false) {
+      return res.status(404).json({ message: "Target user not found" });
+    }
+
+    if (!canMessageTarget(currentUser.role, targetUser.role)) {
+      return res.status(403).json({ message: "Messaging this user is not allowed" });
+    }
+
     const conversation = await ensureConversationBetweenUsers(userId, participantId);
     const populated = await Conversation.findById(conversation._id).populate({
       path: "participants",
@@ -39,6 +82,45 @@ exports.createConversation = async (req, res) => {
     return res.status(201).json(populated);
   } catch (error) {
     return res.status(500).json({ message: "Failed to create conversation" });
+  }
+};
+
+exports.searchUsers = async (req, res) => {
+  try {
+    const userId = getUserId(req);
+    const query = String(req.query.query || "").trim();
+    const role = String(req.user.role || "");
+
+    if (!query || query.length < 2) {
+      return res.json([]);
+    }
+
+    const allowedRoles = getAllowedSearchRoles(role);
+    if (!allowedRoles.length) {
+      return res.json([]);
+    }
+
+    const candidates = await User.find({
+      _id: { $ne: userId },
+      isActive: ACTIVE_USER_FILTER,
+      $or: [
+        { name: { $regex: query, $options: "i" } },
+        { email: { $regex: query, $options: "i" } },
+        { companyName: { $regex: query, $options: "i" } },
+      ],
+    })
+      .select("name email role desiredJobTitle companyName")
+      .sort({ name: 1 })
+      .limit(60);
+
+    const users = candidates
+      .filter((candidate) => allowedRoles.includes(String(candidate.role || "").toLowerCase()))
+      .filter((candidate) => canMessageTarget(role, candidate.role))
+      .slice(0, 20);
+
+    return res.json(users);
+  } catch (error) {
+    return res.status(500).json({ message: "Failed to search users" });
   }
 };
 

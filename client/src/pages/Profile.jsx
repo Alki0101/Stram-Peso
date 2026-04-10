@@ -16,6 +16,7 @@ export default function Profile() {
   });
 
   const isEmployer = profile?.role === "employer";
+  const isAdmin = profile?.role === "admin";
 
   const fallback = (value) => {
     if (!value) return <span className="profile-missing">Not provided</span>;
@@ -37,7 +38,7 @@ export default function Profile() {
             closedJobs: Number(statsData?.closedJobs || 0),
           });
         }
-      } catch (err) {
+      } catch {
         setProfile(user);
       } finally {
         setLoading(false);
@@ -90,7 +91,10 @@ export default function Profile() {
             {profile?.name ? profile.name.trim().charAt(0).toUpperCase() : "U"}
           </div>
           <h1>{profile?.name}</h1>
-          {isEmployer ? (
+
+          {isAdmin ? (
+            <span className="profile-role-admin">🛡️ System Administrator</span>
+          ) : isEmployer ? (
             <>
               <p>{fallback(profile?.companyName)}</p>
               <span className="profile-role-employer">🏢 Employer Account</span>
@@ -105,26 +109,35 @@ export default function Profile() {
           )}
         </header>
 
-        <div className="profile-view-section">
-          <h2>{isEmployer ? "Company Details" : "Personal Details"}</h2>
-          <div className="profile-detail-row"><span>Email Address</span><strong>{fallback(profile?.email)}</strong></div>
-          <div className="profile-detail-row"><span>Phone Number</span><strong>{fallback(profile?.phone)}</strong></div>
-          <div className="profile-detail-row"><span>Date of Birth</span><strong>{formatDate(profile?.dateOfBirth)}</strong></div>
-          <div className="profile-detail-row"><span>Gender</span><strong>{fallback(profile?.gender)}</strong></div>
-          <div className="profile-detail-row"><span>{isEmployer ? "Business Address" : "Address / Location"}</span><strong>{fallback(isEmployer ? profile?.businessAddress || profile?.address : profile?.address)}</strong></div>
+        {isAdmin ? (
+          <>
+            <div className="profile-view-section">
+              <h2>Account Details</h2>
+              <div className="profile-detail-row"><span>Email Address</span><strong>{fallback(profile?.email)}</strong></div>
+              <div className="profile-detail-row"><span>Phone Number</span><strong>{fallback(profile?.phone)}</strong></div>
+              <div className="profile-detail-row"><span>Date Joined</span><strong>{formatDate(profile?.createdAt)}</strong></div>
+            </div>
 
-          {isEmployer ? (
-            <>
+            <div className="profile-view-section">
+              <h2>System Access</h2>
+              <div className="profile-detail-row"><span>Role</span><strong>Administrator</strong></div>
+              <div className="profile-detail-row"><span>Access Level</span><strong>Full System Access</strong></div>
+              <div className="profile-detail-row"><span>Account Status</span><strong>{profile?.isActive === false ? "Inactive" : "Active"}</strong></div>
+            </div>
+          </>
+        ) : isEmployer ? (
+          <>
+            <div className="profile-view-section">
+              <h2>Company Details</h2>
+              <div className="profile-detail-row"><span>Email Address</span><strong>{fallback(profile?.email)}</strong></div>
+              <div className="profile-detail-row"><span>Phone Number</span><strong>{fallback(profile?.phone)}</strong></div>
+              <div className="profile-detail-row"><span>Business Address</span><strong>{fallback(profile?.businessAddress || profile?.address)}</strong></div>
               <div className="profile-detail-row"><span>Company Name</span><strong>{fallback(profile?.companyName)}</strong></div>
               <div className="profile-detail-row"><span>Industry / Sector</span><strong>{fallback(profile?.industry)}</strong></div>
               <div className="profile-detail-row"><span>Company Size</span><strong>{fallback(profile?.companySize)}</strong></div>
               <div className="profile-detail-row"><span>Website / Facebook Page</span><strong>{profile?.website ? <a href={profile.website} target="_blank" rel="noreferrer" className="profile-inline-link">{profile.website}</a> : <span className="profile-missing">Not provided</span>}</strong></div>
-            </>
-          ) : null}
-        </div>
+            </div>
 
-        {isEmployer ? (
-          <>
             <div className="profile-view-section">
               <h2>Company Overview</h2>
               {profile?.companyDescription ? (
@@ -190,6 +203,15 @@ export default function Profile() {
           </>
         ) : (
           <>
+            <div className="profile-view-section">
+              <h2>Personal Details</h2>
+              <div className="profile-detail-row"><span>Email Address</span><strong>{fallback(profile?.email)}</strong></div>
+              <div className="profile-detail-row"><span>Phone Number</span><strong>{fallback(profile?.phone)}</strong></div>
+              <div className="profile-detail-row"><span>Date of Birth</span><strong>{formatDate(profile?.dateOfBirth)}</strong></div>
+              <div className="profile-detail-row"><span>Gender</span><strong>{fallback(profile?.gender)}</strong></div>
+              <div className="profile-detail-row"><span>Address / Location</span><strong>{fallback(profile?.address)}</strong></div>
+            </div>
+
             <div className="profile-view-section">
               <h2>Skills</h2>
               <div className="profile-detail-row profile-detail-row--skills">

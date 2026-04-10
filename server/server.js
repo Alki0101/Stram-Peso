@@ -46,6 +46,7 @@ const upload = multer({
   app.use("/api/employer", require("./routes/employerRoutes"));
   app.use("/api/admin", require("./routes/adminRoutes"));
   app.use("/api/messages", require("./routes/messageRoutes"));
+  app.use("/api/users", require("./routes/userRoutes"));
 
   app.locals.upload = upload;
 

@@ -6,11 +6,14 @@ import { useSocket } from "../context/SocketContext";
 import "../styles/navbar.css";
 import pesoLogo from "../assets/images/peso-logo.png";
 
+const normalizeRole = (role) => (role === "employee" ? "resident" : role);
+
 export default function Navbar() {
   const { user, logout } = useContext(AuthContext);
   const navigate = useNavigate();
   const location = useLocation();
   const socket = useSocket();
+  const userRole = normalizeRole(user?.role);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
@@ -91,16 +94,16 @@ export default function Navbar() {
                   <span className="user-unread-badge">{unreadCount > 9 ? "9+" : unreadCount}</span>
                 )}
               </button>
-              {user.role === "admin" && <Link to="/admin">Admin Dashboard</Link>}
+              {userRole === "admin" && <Link to="/admin">Admin Dashboard</Link>}
 
-              {user.role === "employer" && (
+              {userRole === "employer" && (
                 <>
                   <Link to="/employer">Employer Dashboard</Link>
                   <Link to="/post-job">Post Vacancy</Link>
                 </>
               )}
 
-              {user.role === "resident" && (
+              {userRole === "resident" && (
                 <>
                   <Link to="/dashboard">My Dashboard</Link>
                   <Link to="/jobs">Browse Jobs</Link>

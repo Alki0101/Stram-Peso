@@ -14,6 +14,7 @@
   position: absolute;
   inset: 0;
   background: rgba(0, 0, 0, 0.45);
+  pointer-events: none;
 }
 
 .onboarding-card {
@@ -54,6 +55,12 @@
   margin: 0 0 1rem;
 }
 
+.onboarding-subtitle {
+  margin: -0.35rem 0 1rem;
+  color: #6b7280;
+  font-size: 0.92rem;
+}
+
 .onboarding-fields {
   display: grid;
   gap: 0.9rem;
@@ -71,6 +78,7 @@
 
 .onboarding-fields input,
 .onboarding-fields select,
+.onboarding-fields textarea,
 .skills-entry-row input {
   width: 100%;
   margin-top: 0.4rem;
@@ -90,10 +98,37 @@
 
 .onboarding-fields input:focus,
 .onboarding-fields select:focus,
+.onboarding-fields textarea:focus,
 .skills-entry-row input:focus {
   outline: none;
   border-color: #16a34a;
   box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.16);
+}
+
+.onboarding-textarea {
+  min-height: 120px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.onboarding-field-error {
+  display: block;
+  margin-top: 0.35rem;
+  color: #b42318;
+  font-size: 0.82rem;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: normal;
+}
+
+.onboarding-char-counter {
+  display: block;
+  margin-top: 0.35rem;
+  color: #6b7280;
+  font-size: 0.8rem;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: normal;
 }
 
 .pill-row {
@@ -201,6 +236,32 @@
   color: #fff;
 }
 
+.onboarding-primary-full {
+  width: 100%;
+}
+
+.onboarding-button-loader {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.onboarding-spinner {
+  width: 14px;
+  height: 14px;
+  border: 2px solid rgba(255, 255, 255, 0.5);
+  border-top-color: #ffffff;
+  border-radius: 50%;
+  animation: onboarding-spin 0.8s linear infinite;
+}
+
+@keyframes onboarding-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
 .onboarding-secondary {
   border: 1px solid #d1d5db;
   background: #fff;
@@ -218,6 +279,76 @@
 
 .onboarding-success-step {
   text-align: center;
+}
+
+.onboarding-summary-card {
+  border: 1px solid #e5e7eb;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-top: 0.5rem;
+}
+
+.onboarding-summary-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.75rem 0.9rem;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.onboarding-summary-row:last-child {
+  border-bottom: none;
+}
+
+.onboarding-summary-label {
+  color: #6b7280;
+  font-size: 0.85rem;
+}
+
+.onboarding-summary-value {
+  color: #111827;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: right;
+  max-width: 60%;
+  word-break: break-word;
+}
+
+.onboarding-review-links {
+  margin: 0.85rem 0;
+  display: flex;
+  gap: 0.45rem;
+  flex-direction: column;
+}
+
+.onboarding-edit-link {
+  border: none;
+  background: transparent;
+  color: #15803d;
+  padding: 0;
+  text-align: left;
+  font-weight: 700;
+  text-decoration: underline;
+}
+
+.onboarding-info-box {
+  background: #ecfdf3;
+  border: 1px solid #bbf7d0;
+  color: #14532d;
+  border-radius: 9px;
+  padding: 0.75rem 0.8rem;
+  margin-bottom: 0.9rem;
+  display: flex;
+  gap: 0.55rem;
+  align-items: flex-start;
+  font-size: 0.9rem;
+}
+
+.onboarding-submit-error {
+  margin-top: 0.7rem;
+  color: #b42318;
+  font-size: 0.88rem;
+  font-weight: 600;
 }
 
 .success-icon {
