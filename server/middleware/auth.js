@@ -29,8 +29,8 @@ exports.verifyToken = async (req, res, next) => {
 };
 
 exports.isResident = (req, res, next) => {
-  // Allow all authenticated roles (resident, employee, admin)
-  if (!["resident", "employee", "admin"].includes(req.user.role)) {
+  // Allow residents and legacy employee records, but not admins.
+  if (!["resident", "employee"].includes(req.user.role)) {
     return res.status(403).json({ message: "Access denied" });
   }
   next();

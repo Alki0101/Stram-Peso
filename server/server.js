@@ -41,12 +41,26 @@ const upload = multer({
   app.use(express.json());
   app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
-  app.use("/api/auth", require("./routes/authRoutes"));
-  app.use("/api/jobs", require("./routes/jobRoutes"));
-  app.use("/api/employer", require("./routes/employerRoutes"));
-  app.use("/api/admin", require("./routes/adminRoutes"));
-  app.use("/api/messages", require("./routes/messageRoutes"));
-  app.use("/api/users", require("./routes/userRoutes"));
+  const authRoutes = require("./routes/authRoutes");
+  const jobRoutes = require("./routes/jobRoutes");
+  const employerRoutes = require("./routes/employerRoutes");
+  const adminRoutes = require("./routes/adminRoutes");
+  const messageRoutes = require("./routes/messageRoutes");
+  const userRoutes = require("./routes/userRoutes");
+
+  const mountApiRoutes = (basePath) => {
+    app.use(`${basePath}/auth`, authRoutes);
+    app.use(`${basePath}/jobs`, jobRoutes);
+    app.use(`${basePath}/employer`, employerRoutes);
+    app.use(`${basePath}/admin`, adminRoutes);
+    app.use(`${basePath}/messages`, messageRoutes);
+    app.use(`${basePath}/users`, userRoutes);
+  };
+
+  // Versioned API namespace.
+  mountApiRoutes("/api/v1");
+  // Backward compatibility for existing clients.
+  mountApiRoutes("/api");
 
   app.locals.upload = upload;
 
