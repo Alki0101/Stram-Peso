@@ -1,7 +1,7 @@
 ﻿import { useState, useContext } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
-import { authAPI, API_URL } from "../services/api";
+import { authAPI } from "../services/api";
 import "../styles/auth.css";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 
@@ -101,9 +101,6 @@ export default function Login() {
       <div className="auth-card">
         <h2>Login</h2>
         <p className="auth-subtitle">Access your account to view jobs and manage applications.</p>
-        <p className="auth-subtitle" style={{ fontSize: "12px", marginTop: "-4px" }}>
-          Debug build: 2026-04-12-debug4 | API: {API_URL}
-        </p>
 
         {error && <p className="error-message">{error}</p>}
 
