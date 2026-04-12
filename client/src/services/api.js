@@ -1,6 +1,6 @@
 import axios from "axios";
 
-const API_URL = (import.meta.env.VITE_API_URL || "http://localhost:3000/api/v1").replace(/\/$/, "");
+const API_URL = "https://stram-peso.onrender.com/api/v1";
 
 const getAuthHeader = () => {
   const token = localStorage.getItem("token");
