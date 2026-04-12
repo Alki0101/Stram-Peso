@@ -6,6 +6,27 @@ import "../styles/auth.css";
 
 const normalizeRole = (role) => (role === "employee" ? "resident" : role);
 
+const formatApiError = (err, fallback = "Registration failed") => {
+  const status = err?.response?.status;
+  const data = err?.response?.data;
+
+  if (typeof data === "string" && data.trim()) {
+    return status ? `${data} (HTTP ${status})` : data;
+  }
+
+  const message = data?.message || data?.error || err?.message;
+
+  if (message) {
+    return status ? `${message} (HTTP ${status})` : message;
+  }
+
+  if (err?.code === "ERR_NETWORK") {
+    return "Network error: backend unreachable or blocked by CORS.";
+  }
+
+  return fallback;
+};
+
 export default function Register() {
   const [formData, setFormData] = useState({
     name: "",
@@ -72,7 +93,7 @@ export default function Register() {
         navigate(getDefaultRouteByRole(mergedUser?.role));
       }
     } catch (err) {
-      setError(err.response?.data?.message || err.message || "Registration failed");
+      setError(formatApiError(err, "Registration failed"));
     } finally {
       setLoading(false);
     }

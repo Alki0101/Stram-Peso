@@ -7,6 +7,27 @@ import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 const normalizeRole = (role) => (role === "employee" ? "resident" : role);
 
+const formatApiError = (err, fallback = "Login failed") => {
+  const status = err?.response?.status;
+  const data = err?.response?.data;
+
+  if (typeof data === "string" && data.trim()) {
+    return status ? `${data} (HTTP ${status})` : data;
+  }
+
+  const message = data?.message || data?.error || err?.message;
+
+  if (message) {
+    return status ? `${message} (HTTP ${status})` : message;
+  }
+
+  if (err?.code === "ERR_NETWORK") {
+    return "Network error: backend unreachable or blocked by CORS.";
+  }
+
+  return fallback;
+};
+
 export default function Login() {
   const [formData, setFormData] = useState({ email: "", password: "" });
   const [showPassword, setShowPassword] = useState(false);
@@ -64,7 +85,7 @@ export default function Login() {
 
       navigate(getDefaultRouteByRole(mergedUser?.role));
     } catch (err) {
-      setError(err.response?.data?.message || err.message || "Login failed");
+      setError(formatApiError(err, "Login failed"));
     } finally {
       setLoading(false);
     }
