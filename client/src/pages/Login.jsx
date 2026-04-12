@@ -25,7 +25,12 @@ const formatApiError = (err, fallback = "Login failed") => {
     return "Network error: backend unreachable or blocked by CORS.";
   }
 
-  return fallback;
+  const safeData =
+    typeof data === "object" && data !== null
+      ? JSON.stringify(data)
+      : String(data || "none");
+
+  return `${fallback} | status:${status || "none"} | code:${err?.code || "none"} | message:${err?.message || "none"} | data:${safeData}`;
 };
 
 export default function Login() {
