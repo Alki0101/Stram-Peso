@@ -11,8 +11,8 @@ STRAM-PESO is a full-stack job platform with role-based workflows for residents 
    - https://strampeso.vercel.app/
 3. Link to the Live Backend API
    - https://stram-peso.onrender.com
-4. - API Documentation: see ./STRAM-PESO.pdf
-5. - Part 1 Proposal Document: ./STRAM-PESO.pdf
+4. - API Documentation: **see** ./STRAM-PESO.pdf
+5. - Part 1 Proposal Document: **see** ./STRAM-PESO.pdf
 
 ## Live Deployment
 
