@@ -43,6 +43,39 @@ const formatDate = (value) => {
   });
 };
 
+const getApplicantContact = (application) => {
+  const applicant = application?.applicant || {};
+  return applicant.phone || applicant.contactNumber || applicant.mobile || applicant.email || "N/A";
+};
+
+const normalizeRecentApplicantStatus = (value) => {
+  const normalized = normalizeApplicationStatus(value);
+  if (normalized === "active") return "active";
+  if (normalized === "hired") return "hired";
+  return "pending";
+};
+
+const recentApplicantStatusClass = (value) => `recent-${normalizeRecentApplicantStatus(value)}`;
+
+const recentApplicantStatusLabel = (value) => {
+  const normalized = normalizeRecentApplicantStatus(value);
+  return normalized.charAt(0).toUpperCase() + normalized.slice(1);
+};
+
+const getInitials = (name) => {
+  const text = String(name || "").trim();
+  if (!text) return "NA";
+  const parts = text.split(/\s+/).filter(Boolean);
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return `${parts[0][0]}${parts[1][0]}`.toUpperCase();
+};
+
+const normalizeDrawerStatus = (value) => {
+  const normalized = normalizeApplicationStatus(value);
+  if (["pending", "shortlisted", "hired", "rejected"].includes(normalized)) return normalized;
+  return "pending";
+};
+
 export default function EmployerDashboard() {
   const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState("overview");
@@ -195,9 +228,8 @@ export default function EmployerDashboard() {
   };
 
   const openApplicantDrawer = (application) => {
-    const normalizedStatus = normalizeApplicationStatus(application.status);
     setSelectedApplication(application);
-    setDrawerStatus(normalizedStatus);
+    setDrawerStatus(normalizeDrawerStatus(application.status));
     setDrawerNote(application.employerNote || "");
   };
 
@@ -295,55 +327,92 @@ export default function EmployerDashboard() {
                   <div className="table-card-header">
                     <h2>Recent Applicants</h2>
                   </div>
-                  <div className="table-scroll-wrap">
-                    <table className="employer-table">
-                      <thead>
-                        <tr>
-                          <th>Applicant Name</th>
-                          <th>Applied For</th>
-                          <th>Date</th>
-                          <th>Status</th>
-                          <th>Action</th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {!recentApplicants.length ? (
-                          <tr>
-                            <td colSpan="5" className="empty-cell">No recent applicants yet.</td>
-                          </tr>
-                        ) : (
-                          recentApplicants.map((application) => (
-                            <tr key={application._id}>
-                              <td>{application.applicant?.name || "Unknown Applicant"}</td>
-                              <td>{application.vacancy?.title || "Unknown Job"}</td>
-                              <td>{formatDate(application.createdAt || application.appliedAt)}</td>
-                              <td>
-                                <span className={`status-pill ${statusClass(application.status)}`}>
-                                  {normalizeApplicationStatus(application.status)}
-                                </span>
-                              </td>
-                              <td>
+                  {!recentApplicants.length ? (
+                    <div className="recent-applicants-empty">No recent applicants yet.</div>
+                  ) : (
+                    <>
+                      <div className="table-scroll-wrap recent-applicants-table-wrap">
+                        <table className="employer-table recent-applicants-table">
+                          <colgroup>
+                            <col style={{ width: "22%" }} />
+                            <col style={{ width: "24%" }} />
+                            <col style={{ width: "14%" }} />
+                            <col style={{ width: "13%" }} />
+                            <col style={{ width: "15%" }} />
+                            <col style={{ width: "12%" }} />
+                          </colgroup>
+                          <thead>
+                            <tr>
+                              <th>Applicant Name</th>
+                              <th>Applied For</th>
+                              <th>Date</th>
+                              <th>Status</th>
+                              <th>Contact</th>
+                              <th>Action</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            {recentApplicants.map((application) => (
+                              <tr key={application._id}>
+                                <td>{application.applicant?.name || "Unknown Applicant"}</td>
+                                <td>{application.vacancy?.title || "Unknown Job"}</td>
+                                <td>{formatDate(application.createdAt || application.appliedAt)}</td>
+                                <td>
+                                  <span className={`status-pill ${recentApplicantStatusClass(application.status)}`}>
+                                    {recentApplicantStatusLabel(application.status)}
+                                  </span>
+                                </td>
+                                <td>{getApplicantContact(application)}</td>
+                                <td>
+                                  <button
+                                    type="button"
+                                    className="recent-view-btn"
+                                    onClick={() => openApplicantDrawer(application)}
+                                  >
+                                    View
+                                  </button>
+                                </td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
+
+                      <div className="recent-applicants-mobile" aria-label="Recent applicants mobile list">
+                        {recentApplicants.map((application) => (
+                          <article key={`mobile-${application._id}`} className="recent-applicant-card">
+                            <div className="recent-applicant-top">
+                              <strong>{application.applicant?.name || "Unknown Applicant"}</strong>
+                              <span className={`status-pill ${recentApplicantStatusClass(application.status)}`}>
+                                {recentApplicantStatusLabel(application.status)}
+                              </span>
+                            </div>
+                            <div className="recent-applicant-grid">
+                              <span className="label">Applied For</span>
+                              <span className="value">{application.vacancy?.title || "Unknown Job"}</span>
+
+                              <span className="label">Date</span>
+                              <span className="value">{formatDate(application.createdAt || application.appliedAt)}</span>
+
+                              <span className="label">Contact</span>
+                              <span className="value">{getApplicantContact(application)}</span>
+
+                              <span className="label">Action</span>
+                              <span className="value">
                                 <button
                                   type="button"
-                                  className="text-action-btn"
+                                  className="recent-view-btn"
                                   onClick={() => openApplicantDrawer(application)}
                                 >
                                   View
                                 </button>
-                                <button
-                                  type="button"
-                                  className="text-action-btn"
-                                  onClick={() => handleMessageApplicant(application.applicant?._id)}
-                                >
-                                  Message
-                                </button>
-                              </td>
-                            </tr>
-                          ))
-                        )}
-                      </tbody>
-                    </table>
-                  </div>
+                              </span>
+                            </div>
+                          </article>
+                        ))}
+                      </div>
+                    </>
+                  )}
                 </div>
               </div>
             )}
@@ -440,16 +509,18 @@ export default function EmployerDashboard() {
                           <span className={`status-pill ${statusClass(application.status)}`}>
                             {normalizeApplicationStatus(application.status)}
                           </span>
-                          <button type="button" className="text-action-btn" onClick={() => openApplicantDrawer(application)}>
-                            View Details
-                          </button>
-                          <button
-                            type="button"
-                            className="text-action-btn"
-                            onClick={() => handleMessageApplicant(application.applicant?._id)}
-                          >
-                            Message Applicant
-                          </button>
+                          <div className="applicant-row-actions">
+                            <button type="button" className="text-action-btn" onClick={() => openApplicantDrawer(application)}>
+                              View Details
+                            </button>
+                            <button
+                              type="button"
+                              className="text-action-btn"
+                              onClick={() => handleMessageApplicant(application.applicant?._id)}
+                            >
+                              Message Applicant
+                            </button>
+                          </div>
                         </article>
                       ))}
                     </div>
@@ -553,21 +624,53 @@ export default function EmployerDashboard() {
       {selectedApplication && (
         <div className="drawer-overlay" onClick={() => setSelectedApplication(null)}>
           <aside className="applicant-drawer" onClick={(event) => event.stopPropagation()}>
-            <header>
-              <h3>Applicant Details</h3>
-              <button type="button" onClick={() => setSelectedApplication(null)} aria-label="Close details">x</button>
+            <div className="drawer-handle" aria-hidden="true" />
+
+            <header className="drawer-header">
+              <div className="drawer-header-main">
+                <div className="drawer-avatar">{getInitials(selectedApplication.applicant?.name)}</div>
+                <div className="drawer-header-text">
+                  <h3>{selectedApplication.applicant?.name || "N/A"}</h3>
+                  <p>{selectedApplication.vacancy?.title || "Applied Position"}</p>
+                </div>
+              </div>
+              <button
+                type="button"
+                className="drawer-close-btn"
+                onClick={() => setSelectedApplication(null)}
+                aria-label="Close details"
+              >
+                ×
+              </button>
             </header>
 
             <div className="drawer-body">
-              <p><strong>Full name:</strong> {selectedApplication.applicant?.name || "N/A"}</p>
-              <p><strong>Email:</strong> {selectedApplication.applicant?.email || "N/A"}</p>
-              <p><strong>Phone:</strong> {selectedApplication.applicant?.phone || "N/A"}</p>
-              <p><strong>Address:</strong> {selectedApplication.applicant?.address || "N/A"}</p>
-              <p><strong>Application date:</strong> {formatDate(selectedApplication.createdAt || selectedApplication.appliedAt)}</p>
+              <div className="drawer-info-list">
+                <div className="drawer-info-row">
+                  <span className="drawer-info-label">Full name</span>
+                  <span className="drawer-info-value">{selectedApplication.applicant?.name || "N/A"}</span>
+                </div>
+                <div className="drawer-info-row">
+                  <span className="drawer-info-label">Email</span>
+                  <span className="drawer-info-value">{selectedApplication.applicant?.email || "N/A"}</span>
+                </div>
+                <div className="drawer-info-row">
+                  <span className="drawer-info-label">Phone</span>
+                  <span className="drawer-info-value">{selectedApplication.applicant?.phone || "N/A"}</span>
+                </div>
+                <div className="drawer-info-row">
+                  <span className="drawer-info-label">Address</span>
+                  <span className="drawer-info-value">{selectedApplication.applicant?.address || "N/A"}</span>
+                </div>
+                <div className="drawer-info-row">
+                  <span className="drawer-info-label">Application date</span>
+                  <span className="drawer-info-value">{formatDate(selectedApplication.createdAt || selectedApplication.appliedAt)}</span>
+                </div>
+              </div>
 
-              <div className="drawer-skills">
-                <strong>Skills</strong>
-                <div className="skill-chip-list">
+              <div className="drawer-section">
+                <p className="drawer-section-label">Skills</p>
+                <div className="drawer-skill-list">
                   {(selectedApplication.applicant?.skills || []).length ? (
                     selectedApplication.applicant.skills.map((skill) => <span key={skill}>{skill}</span>)
                   ) : (
@@ -578,42 +681,51 @@ export default function EmployerDashboard() {
 
               {selectedApplication.resume ? (
                 <a
-                  className="resume-link"
+                  className="drawer-resume-link"
                   href={`http://localhost:3000/${String(selectedApplication.resume).replace(/^\/+/, "")}`}
                   target="_blank"
                   rel="noreferrer"
                 >
-                  Download Resume
+                  <span aria-hidden="true">↓</span>
+                  <span>Download Resume</span>
                 </a>
               ) : null}
 
-              <label>
-                Status
-                <select value={drawerStatus} onChange={(event) => setDrawerStatus(event.target.value)}>
-                  <option value="pending">pending</option>
-                  <option value="reviewed">reviewed</option>
-                  <option value="shortlisted">shortlisted</option>
-                  <option value="rejected">rejected</option>
-                  <option value="hired">hired</option>
+              <label className="drawer-field">
+                <span className="drawer-section-label">Status</span>
+                <select
+                  className={`drawer-status-select status-${drawerStatus}`}
+                  value={drawerStatus}
+                  onChange={(event) => setDrawerStatus(event.target.value)}
+                >
+                  <option value="pending">Pending</option>
+                  <option value="shortlisted">Shortlisted</option>
+                  <option value="hired">Hired</option>
+                  <option value="rejected">Rejected</option>
                 </select>
               </label>
 
-              <label>
-                Note to Applicant
+              <label className="drawer-field">
+                <span className="drawer-section-label">Note to Applicant</span>
                 <textarea
                   rows="4"
                   value={drawerNote}
                   onChange={(event) => setDrawerNote(event.target.value)}
-                  placeholder="Add a quick status note"
+                  placeholder="Add a quick status note…"
                 />
               </label>
-            </div>
 
-            <footer>
-              <button type="button" className="green-btn" onClick={handleSaveApplicationStatus} disabled={isSavingApplication}>
-                {isSavingApplication ? "Saving..." : "Save & Notify"}
-              </button>
-            </footer>
+              <footer className="drawer-footer">
+                <button
+                  type="button"
+                  className="drawer-save-btn"
+                  onClick={handleSaveApplicationStatus}
+                  disabled={isSavingApplication}
+                >
+                  {isSavingApplication ? "Saving..." : "Save & Notify"}
+                </button>
+              </footer>
+            </div>
           </aside>
         </div>
       )}

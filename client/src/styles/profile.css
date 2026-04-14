@@ -136,6 +136,8 @@
   font-size: 0.92rem;
   font-weight: 600;
   text-align: right;
+  max-width: 65%;
+  min-width: 0;
 }
 
 .profile-detail-row--skills {
@@ -201,6 +203,10 @@
   color: #16a34a;
   font-weight: 700;
   text-decoration: none;
+  display: inline-block;
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  word-break: break-word;
 }
 
 .profile-inline-link:hover {
@@ -686,6 +692,10 @@
   .profile-skills-list {
     text-align: left;
     justify-content: flex-start;
+  }
+
+  .profile-detail-row strong {
+    max-width: 100%;
   }
 
   .profile-stats-row {

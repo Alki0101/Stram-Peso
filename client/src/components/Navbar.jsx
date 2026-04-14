@@ -175,6 +175,13 @@ export default function Navbar() {
             className="mobile-menu-panel"
             onClick={(event) => event.stopPropagation()}
           >
+            <Link to="/" className="mobile-menu-brand" onClick={closeMobileMenu}>
+              <span className="mobile-menu-brand-icon">
+                <img src={pesoLogo} alt="PESO Marinduque Logo" />
+              </span>
+              <span className="mobile-menu-brand-text">STRAM PESO</span>
+            </Link>
+
             <div className="mobile-menu-links">
               <Link to="/" onClick={closeMobileMenu}>Home</Link>
 

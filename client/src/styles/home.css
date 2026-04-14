@@ -528,6 +528,8 @@ body, html {
   font-size: 0.7rem;
   margin: 0;
   opacity: 0.8;
+  line-height: 1.35;
+  padding: 0 0.9rem;
 }
 
 /* Responsive Design */
@@ -561,7 +563,10 @@ body, html {
   }
   
   .bottom-footer {
-    bottom: 0.5rem;
+    position: relative;
+    bottom: auto;
+    margin-top: 0.5rem;
+    padding-bottom: 0.75rem;
   }
   
   .bottom-footer p {
@@ -595,5 +600,16 @@ body, html {
   
   .bottom-text-content {
     margin-left: 0.75rem;
+  }
+
+  .bottom-footer {
+    margin-top: 0.35rem;
+    padding-bottom: 0.9rem;
+  }
+
+  .bottom-footer p {
+    font-size: 0.6rem;
+    line-height: 1.4;
+    padding: 0 0.75rem;
   }
 }
