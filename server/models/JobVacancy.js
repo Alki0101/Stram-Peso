@@ -6,6 +6,7 @@ const jobVacancySchema = new mongoose.Schema({
   location: { type: String, required: true },
   salary: { type: String, default: "", required: false },
   requirements: { type: String, default: "", required: false },
+  applicationDeadline: { type: Date, default: null, required: false },
   jobType: {
     type: String,
     enum: ["Full-time", "Part-time", "Contract", "Internship"],
@@ -15,6 +16,8 @@ const jobVacancySchema = new mongoose.Schema({
   employer: { type: mongoose.Schema.Types.ObjectId, ref: "User", required: true },
   isActive: { type: Boolean, default: true },
   status: { type: String, enum: ["active", "closed", "draft"], default: "active" },
+  isFeatured: { type: Boolean, default: false },
+  featuredOrder: { type: Number, default: null },
   createdAt: { type: Date, default: Date.now },
   updatedAt: { type: Date, default: Date.now },
 });

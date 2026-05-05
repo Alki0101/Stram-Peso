@@ -4,7 +4,7 @@ import { AuthContext } from "../context/AuthContext";
 import { authAPI } from "../services/api";
 import "../styles/auth.css";
 
-const normalizeRole = (role) => (role === "employee" ? "resident" : role);
+const normalizeRole = (role) => (role === "employee" || role === "jobseeker" ? "resident" : role);
 
 const formatApiError = (err, fallback = "Registration failed") => {
   const status = err?.response?.status;

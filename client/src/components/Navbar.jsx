@@ -7,7 +7,31 @@ import { useSocket } from "../context/SocketContext";
 import "../styles/navbar.css";
 import pesoLogo from "../assets/images/peso-logo.png";
 
-const normalizeRole = (role) => (role === "employee" ? "resident" : role);
+const normalizeRole = (role) => (role === "employee" || role === "jobseeker" ? "resident" : role);
+
+const getLoggedInMenuItems = (userRole) => {
+  if (userRole === "admin") {
+    return [{ label: "Admin Dashboard", to: "/admin" }];
+  }
+
+  if (userRole === "employer") {
+    return [
+      { label: "Employer Dashboard", to: "/employer" },
+      { label: "Post Vacancy", to: "/post-job" },
+    ];
+  }
+
+  return [
+    { label: "My Dashboard", to: "/dashboard" },
+    { label: "Browse Jobs", to: "/jobs" },
+  ];
+};
+
+const getDefaultRouteByRole = (role) => {
+  if (role === "admin") return "/admin";
+  if (role === "employer") return "/employer";
+  return "/dashboard";
+};
 
 export default function Navbar() {
   const { user, logout } = useContext(AuthContext);
@@ -15,12 +39,16 @@ export default function Navbar() {
   const location = useLocation();
   const socket = useSocket();
   const userRole = normalizeRole(user?.role);
+  const isLoggedIn = Boolean(user);
+  const loggedInMenuItems = getLoggedInMenuItems(userRole);
+
   const [showLogoutModal, setShowLogoutModal] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
 
   const handleConfirmLogout = () => {
     setShowLogoutModal(false);
+    setIsMobileMenuOpen(false);
     logout();
     navigate("/login");
   };
@@ -78,14 +106,14 @@ export default function Navbar() {
 
   useEffect(() => {
     const handleResize = () => {
-      if (window.innerWidth > 768) {
+      if (window.innerWidth > 768 && !user) {
         setIsMobileMenuOpen(false);
       }
     };
 
     window.addEventListener("resize", handleResize);
     return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  }, [user]);
 
   const openLogoutModal = () => {
     setIsMobileMenuOpen(false);
@@ -98,74 +126,57 @@ export default function Navbar() {
 
   return (
     <nav className="navbar">
-      
-
-        <div className="nav-container">
-        {/* Logo Section */}
-        <Link to="/" className="nav-logo-section">
+      <div className="nav-container">
+        <Link to={isLoggedIn ? getDefaultRouteByRole(userRole) : "/"} className="nav-logo-section">
           <div className="nav-logo-icon">
             <img src={pesoLogo} alt="PESO Marinduque Logo" />
           </div>
           <span className="nav-logo-text">STRAM PESO</span>
         </Link>
 
-        <button
-          type="button"
-          className="mobile-menu-toggle"
-          onClick={() => setIsMobileMenuOpen((prev) => !prev)}
-          aria-label={isMobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
-          aria-expanded={isMobileMenuOpen}
-          aria-controls="mobile-nav-panel"
-        >
-          {isMobileMenuOpen ? "CLOSE" : "MENU"}
-        </button>
+        {isLoggedIn ? (
+          <div className="nav-actions">
+            <button type="button" className="user-pill-button" onClick={() => navigate("/profile")}> 
+              <span className="user-name">
+                <FaUserCircle className="user-pill-icon" aria-hidden="true" />
+                {user.name}
+              </span>
+            </button>
 
-        <div className="nav-links">
-          <Link to="/">Home</Link>
+            <button
+              type="button"
+              className="mobile-menu-toggle mobile-menu-toggle--auth"
+              onClick={() => setIsMobileMenuOpen((prev) => !prev)}
+              aria-label={isMobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+              aria-expanded={isMobileMenuOpen}
+              aria-controls="mobile-nav-panel"
+            >
+              {isMobileMenuOpen ? "CLOSE" : "MENU"}
+            </button>
+          </div>
+        ) : (
+          <>
+            <button
+              type="button"
+              className="mobile-menu-toggle mobile-menu-toggle--public"
+              onClick={() => setIsMobileMenuOpen((prev) => !prev)}
+              aria-label={isMobileMenuOpen ? "Close navigation menu" : "Open navigation menu"}
+              aria-expanded={isMobileMenuOpen}
+              aria-controls="mobile-nav-panel"
+            >
+              {isMobileMenuOpen ? "CLOSE" : "MENU"}
+            </button>
 
-          {user ? (
-            <>
-              <button type="button" className="user-pill-button" onClick={() => navigate("/profile")}>
-                <span className="user-name">
-                  <FaUserCircle className="user-pill-icon" aria-hidden="true" />
-                  {user.name}
-                </span>
-              </button>
-              {userRole === "admin" && <Link to="/admin">Admin Dashboard</Link>}
-
-              {userRole === "employer" && (
-                <>
-                  <Link to="/employer">Employer Dashboard</Link>
-                  <Link to="/post-job">Post Vacancy</Link>
-                </>
-              )}
-
-              {userRole === "resident" && (
-                <>
-                  <Link to="/dashboard">My Dashboard</Link>
-                  <Link to="/jobs">Browse Jobs</Link>
-                </>
-              )}
-
-              <Link to="/messages" className="messages-link">
-                <FaEnvelope className="nav-link-icon" aria-hidden="true" />
-                <span>Messages</span>
-                {unreadCount > 0 && (
-                  <span className="user-unread-badge">{unreadCount > 9 ? "9+" : unreadCount}</span>
-                )}
-              </Link>
-              <button className="logout-btn" onClick={openLogoutModal}>
-                Logout
-              </button>
-            </>
-          ) : (
-            <>
+            <div className="nav-links nav-links--public">
+              <Link to="/">Home</Link>
+              <Link to="/#programs">Programs</Link>
+              <Link to="/#available-jobs">Available Jobs</Link>
               <Link to="/login">Login</Link>
               <Link to="/register">Register</Link>
               <Link to="/register-employer">Register as Employer</Link>
-            </>
-          )}
-        </div>
+            </div>
+          </>
+        )}
       </div>
 
       {isMobileMenuOpen && (
@@ -183,9 +194,11 @@ export default function Navbar() {
             </Link>
 
             <div className="mobile-menu-links">
-              <Link to="/" onClick={closeMobileMenu}>Home</Link>
+              {(!isLoggedIn || userRole !== "admin") && (
+                <Link to="/" onClick={closeMobileMenu}>Home</Link>
+              )}
 
-              {user ? (
+              {isLoggedIn ? (
                 <>
                   <button
                     type="button"
@@ -201,23 +214,11 @@ export default function Navbar() {
                     </span>
                   </button>
 
-                  {userRole === "admin" && (
-                    <Link to="/admin" onClick={closeMobileMenu}>Admin Dashboard</Link>
-                  )}
-
-                  {userRole === "employer" && (
-                    <>
-                      <Link to="/employer" onClick={closeMobileMenu}>Employer Dashboard</Link>
-                      <Link to="/post-job" onClick={closeMobileMenu}>Post Vacancy</Link>
-                    </>
-                  )}
-
-                  {userRole === "resident" && (
-                    <>
-                      <Link to="/dashboard" onClick={closeMobileMenu}>My Dashboard</Link>
-                      <Link to="/jobs" onClick={closeMobileMenu}>Browse Jobs</Link>
-                    </>
-                  )}
+                  {loggedInMenuItems.map((item) => (
+                    <Link key={item.to} to={item.to} onClick={closeMobileMenu}>
+                      {item.label}
+                    </Link>
+                  ))}
 
                   <Link to="/messages" className="messages-link" onClick={closeMobileMenu}>
                     <FaEnvelope className="nav-link-icon" aria-hidden="true" />
@@ -233,6 +234,8 @@ export default function Navbar() {
                 </>
               ) : (
                 <>
+                  <Link to="/#programs" onClick={closeMobileMenu}>Programs</Link>
+                  <Link to="/#available-jobs" onClick={closeMobileMenu}>Available Jobs</Link>
                   <Link to="/login" onClick={closeMobileMenu}>Login</Link>
                   <Link to="/register" onClick={closeMobileMenu}>Register</Link>
                   <Link to="/register-employer" onClick={closeMobileMenu}>Register as Employer</Link>

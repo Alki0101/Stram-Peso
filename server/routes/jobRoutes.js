@@ -6,6 +6,7 @@ const {
   createJob,
   getJobs,
   getJobById,
+  getHomepageJobs,
   updateJob,
   deleteJob,
   applyToJob,
@@ -40,7 +41,8 @@ const upload = multer({
   }
 });
 
-router.get("/", verifyToken, getJobs);
+router.get("/homepage", getHomepageJobs);
+router.get("/", getJobs);
 router.get("/mine", verifyToken, isEmployer, getEmployerJobs);
 router.get("/applications/me", verifyToken, isResident, getMyApplications);
 router.put("/applications/:id", verifyToken, isResident, upload.single("resume"), updateMyApplication);
@@ -48,7 +50,7 @@ router.delete("/applications/:id", verifyToken, isResident, deleteMyApplication)
 router.post("/", verifyToken, isEmployer, createJob);
 router.post("/:id/apply", verifyToken, isResident, upload.single("resume"), applyToJob);
 router.get("/:id/applications", verifyToken, getApplicationsForJob);
-router.get("/:id", verifyToken, getJobById);
+router.get("/:id", getJobById);
 router.put("/:id", verifyToken, isEmployer, updateJob);
 router.delete("/:id", verifyToken, isEmployer, deleteJob);
 

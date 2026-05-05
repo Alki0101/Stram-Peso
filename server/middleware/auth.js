@@ -29,8 +29,8 @@ exports.verifyToken = async (req, res, next) => {
 };
 
 exports.isResident = (req, res, next) => {
-  // Allow residents and legacy employee records, but not admins.
-  if (!["resident", "employee"].includes(req.user.role)) {
+  // Allow residents and legacy job seeker records, but not admins.
+  if (!["resident", "employee", "jobseeker"].includes(req.user.role)) {
     return res.status(403).json({ message: "Access denied" });
   }
   next();
@@ -54,7 +54,7 @@ exports.isEmployer = (req, res, next) => {
 
 exports.isEmployeeOrResident = (req, res, next) => {
   // Allow residents and employees, but not admins
-  if (!["resident", "employee"].includes(req.user.role)) {
+  if (!["resident", "employee", "jobseeker"].includes(req.user.role)) {
     return res.status(403).json({ message: "Only residents or employees can perform this action" });
   }
   next();

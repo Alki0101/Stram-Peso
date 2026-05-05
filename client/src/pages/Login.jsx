@@ -5,7 +5,7 @@ import { authAPI } from "../services/api";
 import "../styles/auth.css";
 import { FaEye, FaEyeSlash } from "react-icons/fa";
 
-const normalizeRole = (role) => (role === "employee" ? "resident" : role);
+const normalizeRole = (role) => (role === "employee" || role === "jobseeker" ? "resident" : role);
 
 const formatApiError = (err, fallback = "Login failed") => {
   const status = err?.response?.status;

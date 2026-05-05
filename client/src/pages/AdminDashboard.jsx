@@ -237,12 +237,18 @@ export default function AdminDashboard() {
 
   const [loadingAnalytics, setLoadingAnalytics] = useState(true);
   const [loadingUsers, setLoadingUsers] = useState(true);
+  const [loadingHomepageJobs, setLoadingHomepageJobs] = useState(true);
   const [error, setError] = useState("");
+  const [homepageJobsError, setHomepageJobsError] = useState("");
 
   const [verificationTarget, setVerificationTarget] = useState("");
   const [busyUserId, setBusyUserId] = useState("");
+  const [busyJobId, setBusyJobId] = useState("");
 
   const [inviteCode, setInviteCode] = useState("");
+  const [homepageJobs, setHomepageJobs] = useState([]);
+  const [rankedHomepageJobs, setRankedHomepageJobs] = useState([]);
+  const [featuredCount, setFeaturedCount] = useState(0);
 
   useEffect(() => {
     if (user?.role !== "admin") {
@@ -266,6 +272,10 @@ export default function AdminDashboard() {
   useEffect(() => {
     fetchUsers();
   }, [roleFilter, search, currentPage]);
+
+  useEffect(() => {
+    fetchHomepageJobs();
+  }, []);
 
   const fetchAnalytics = async () => {
     try {
@@ -299,6 +309,21 @@ export default function AdminDashboard() {
       setError(err.response?.data?.message || "Failed to load users");
     } finally {
       setLoadingUsers(false);
+    }
+  };
+
+  const fetchHomepageJobs = async () => {
+    try {
+      setLoadingHomepageJobs(true);
+      const { data } = await adminAPI.getHomepageJobManagement();
+      setHomepageJobs(Array.isArray(data.jobs) ? data.jobs : []);
+      setRankedHomepageJobs(Array.isArray(data.rankedJobs) ? data.rankedJobs : []);
+      setFeaturedCount(Number(data.featuredCount || 0));
+      setHomepageJobsError("");
+    } catch (err) {
+      setHomepageJobsError(err.response?.data?.message || "Failed to load homepage job management");
+    } finally {
+      setLoadingHomepageJobs(false);
     }
   };
 
@@ -400,6 +425,27 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleToggleHomepageFeature = async (jobId, nextValue) => {
+    try {
+      setBusyJobId(jobId);
+      await adminAPI.toggleHomepageFeature(jobId, nextValue);
+      await fetchHomepageJobs();
+      await fetchAnalytics();
+    } catch (err) {
+      setHomepageJobsError(err.response?.data?.message || "Failed to update homepage feature");
+    } finally {
+      setBusyJobId("");
+    }
+  };
+
+  const getEmployerDisplay = (job) => {
+    if (!job?.employer || typeof job.employer !== "object") {
+      return "Unknown employer";
+    }
+
+    return job.employer.companyName || job.employer.name || "Unknown employer";
+  };
+
   return (
     <div className="admin-panel-page">
       <section className="admin-banner">
@@ -461,6 +507,112 @@ export default function AdminDashboard() {
             </div>
           </div>
         </article>
+      </section>
+
+      <section className="admin-job-home-section">
+        <header className="admin-job-home-header">
+          <div>
+            <h2>Homepage Display</h2>
+            <p>Manage featured jobs on the public homepage and review which openings are getting the most attention.</p>
+          </div>
+          <div className="admin-job-home-badge">
+            Featured slots used: <strong>{featuredCount}/4</strong>
+          </div>
+        </header>
+
+        {homepageJobsError ? <div className="error-message">{homepageJobsError}</div> : null}
+
+        <div className="admin-job-home-grid">
+          <article className="admin-job-home-card">
+            <div className="table-card-header">
+              <h3>Active Job Postings</h3>
+            </div>
+
+            {loadingHomepageJobs ? (
+              <p className="loading">Loading homepage jobs...</p>
+            ) : (
+              <div className="admin-table-wrap">
+                <table className="admin-users-table admin-home-job-table">
+                  <thead>
+                    <tr>
+                      <th>Job Title</th>
+                      <th>Employer</th>
+                      <th>Date Posted</th>
+                      <th>Total Applications</th>
+                      <th>Feature on Homepage</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {homepageJobs.length === 0 ? (
+                      <tr>
+                        <td colSpan={5} className="admin-empty-state">
+                          <div>
+                            <div className="icon">📭</div>
+                            <p>No active job postings found.</p>
+                          </div>
+                        </td>
+                      </tr>
+                    ) : (
+                      homepageJobs.map((job) => {
+                        const isFeatured = Boolean(job.isFeatured);
+                        const isBusy = busyJobId === job._id;
+
+                        return (
+                          <tr key={job._id}>
+                            <td>{job.title}</td>
+                            <td>{getEmployerDisplay(job)}</td>
+                            <td>{formatDate(job.createdAt)}</td>
+                            <td>{Number(job.applicationCount || 0)}</td>
+                            <td>
+                              <label className="admin-feature-toggle">
+                                <input
+                                  type="checkbox"
+                                  checked={isFeatured}
+                                  disabled={isBusy || (!isFeatured && featuredCount >= 4)}
+                                  onChange={(event) => handleToggleHomepageFeature(job._id, event.target.checked)}
+                                />
+                                <span>{isFeatured ? "Featured" : "Not Featured"}</span>
+                              </label>
+                            </td>
+                          </tr>
+                        );
+                      })
+                    )}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </article>
+
+          <article className="admin-job-home-card">
+            <div className="table-card-header">
+              <h3>Application Analytics</h3>
+            </div>
+            {loadingHomepageJobs ? (
+              <p className="loading">Loading analytics...</p>
+            ) : rankedHomepageJobs.length === 0 ? (
+              <div className="admin-empty-state">
+                <div>
+                  <div className="icon">📊</div>
+                  <p>No application data is available yet.</p>
+                </div>
+              </div>
+            ) : (
+              <div className="admin-analytics-list">
+                {rankedHomepageJobs.slice(0, 8).map((job, index) => (
+                  <div key={job._id} className="admin-analytics-row">
+                    <div className="admin-analytics-rank">#{index + 1}</div>
+                    <div className="admin-analytics-main">
+                      <strong>{job.title}</strong>
+                      <span>{getEmployerDisplay(job)}</span>
+                    </div>
+                    <div className="admin-analytics-count">{Number(job.applicationCount || 0)} apps</div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </article>
+        </div>
       </section>
 
       <section className="admin-users-panel">

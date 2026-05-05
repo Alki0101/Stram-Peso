@@ -38,8 +38,9 @@ export const authAPI = {
 
 export const jobAPI = {
   createJob: (data) => axios.post(`${API_URL}/jobs`, data, getAuthHeader()),
-  getJobs: () => axios.get(`${API_URL}/jobs`, getAuthHeader()),
-  getJobById: (id) => axios.get(`${API_URL}/jobs/${id}`, getAuthHeader()),
+  getJobs: () => axios.get(`${API_URL}/jobs`),
+  getHomepageJobs: () => axios.get(`${API_URL}/jobs/homepage`),
+  getJobById: (id) => axios.get(`${API_URL}/jobs/${id}`),
   updateJob: (id, data) => axios.put(`${API_URL}/jobs/${id}`, data, getAuthHeader()),
   deleteJob: (id) => axios.delete(`${API_URL}/jobs/${id}`, getAuthHeader()),
   applyToJob: (id, data) => axios.post(`${API_URL}/jobs/${id}/apply`, data, getAuthFormHeader()),
@@ -53,6 +54,9 @@ export const jobAPI = {
 export const adminAPI = {
   getUsers: (params = {}) => axios.get(`${API_URL}/admin/users`, { ...getAuthHeader(), params }),
   getAnalytics: () => axios.get(`${API_URL}/admin/analytics`, getAuthHeader()),
+  getHomepageJobManagement: () => axios.get(`${API_URL}/admin/jobs/homepage-display`, getAuthHeader()),
+  toggleHomepageFeature: (id, isFeatured) =>
+    axios.put(`${API_URL}/admin/jobs/${id}/homepage-feature`, { isFeatured }, getAuthHeader()),
   updateUserRole: (id, role) => axios.put(`${API_URL}/admin/users/${id}/role`, { role }, getAuthHeader()),
   deactivateUser: (id) => axios.put(`${API_URL}/admin/users/${id}/deactivate`, {}, getAuthHeader()),
   reactivateUser: (id) => axios.put(`${API_URL}/admin/users/${id}/reactivate`, {}, getAuthHeader()),

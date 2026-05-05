@@ -13,6 +13,7 @@ export default function PostJob() {
     jobType: "Full-time",
     slots: 1,
     requirements: "",
+    applicationDeadline: "",
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
@@ -36,6 +37,7 @@ export default function PostJob() {
         jobType: formData.jobType,
         slots: Number(formData.slots) || 1,
         requirements: formData.requirements.trim(),
+        applicationDeadline: formData.applicationDeadline || undefined,
       };
       await employerAPI.createJob(trimmedData);
       alert("Job vacancy created successfully!");
@@ -135,6 +137,17 @@ export default function PostJob() {
               value={formData.slots}
               onChange={handleChange}
               required
+            />
+          </div>
+
+          <div className="post-job-field">
+            <label htmlFor="applicationDeadline">Application Deadline</label>
+            <input
+              id="applicationDeadline"
+              type="date"
+              name="applicationDeadline"
+              value={formData.applicationDeadline}
+              onChange={handleChange}
             />
           </div>
 

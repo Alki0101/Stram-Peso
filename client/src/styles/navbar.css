@@ -35,7 +35,7 @@
 @media (min-width: 1200px) {
   .navbar {
     background-size: cover;
-    padding: 0.75rem 2rem;
+    padding: 0.75rem 0.75rem 0.75rem 0.35rem;
     min-height: 75px;
   }
 }
@@ -45,7 +45,7 @@
   .navbar {
     background-size: cover;
     background-position: center;
-    padding: 0.65rem 1rem;
+    padding: 0.65rem 0.75rem 0.65rem 0.35rem;
     min-height: 70px;
   }
 }
@@ -55,7 +55,7 @@
   .navbar {
     background-size: cover;
     background-position: center;
-    padding: 0.5rem 0.75rem;
+    padding: 0.5rem 0.6rem 0.5rem 0.35rem;
     min-height: auto;
     border-bottom-width: 3px;
   }
@@ -70,7 +70,7 @@
   .navbar {
     background-size: cover;
     background-position: center;
-    padding: 0.5rem 0.5rem;
+    padding: 0.5rem 0.45rem 0.5rem 0.3rem;
     border-bottom-width: 3px;
   }
   
@@ -82,13 +82,14 @@
 /* Extra small devices */
 @media (max-width: 380px) {
   .navbar {
-    padding: 0.4rem 0.4rem;
+    padding: 0.4rem 0.35rem 0.4rem 0.25rem;
   }
 }
 
 .nav-container {
-  max-width: 1400px;
-  margin: 0 auto;
+  max-width: none;
+  width: 100%;
+  margin: 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -96,6 +97,8 @@
   flex-wrap: wrap;
   position: relative;
   z-index: 1;
+  padding-left: 0.35rem;
+  padding-right: 1rem;
 }
 
 /* Logo Section */
@@ -107,6 +110,7 @@
   flex-shrink: 0;
   min-width: fit-content;
   transition: transform 0.2s ease;
+  margin-left: -0.1rem;
 }
 
 .nav-logo-section:hover {
@@ -157,6 +161,17 @@
   font-weight: 700;
   letter-spacing: 0.04em;
   cursor: pointer;
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-left: auto;
+}
+
+.mobile-menu-toggle--auth {
+  display: inline-flex;
 }
 
 .mobile-menu-overlay {
@@ -274,6 +289,10 @@
   flex-shrink: 0;
   text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.4);
   position: relative;
+}
+
+.nav-links--public {
+  margin-left: auto;
 }
 
 .nav-links a::after {
@@ -463,22 +482,13 @@
     font-size: 1rem;
   }
 
-  .mobile-menu-toggle {
+  .mobile-menu-toggle,
+  .mobile-menu-toggle--auth {
     display: inline-flex;
   }
 
   .nav-links {
     display: none;
-  }
-
-  .nav-links {
-    gap: 0.5rem;
-  }
-
-  .nav-links a,
-  .nav-links button {
-    font-size: 0.85rem;
-    padding: 0.4rem 0.6rem;
   }
 
   .user-name {
@@ -502,6 +512,8 @@
     align-items: center;
     justify-content: space-between;
     gap: 0.6rem;
+    padding-left: 0.2rem;
+    padding-right: 0.45rem;
   }
 
   .nav-logo-section {
@@ -553,6 +565,8 @@
   .nav-container {
     flex-direction: row;
     gap: 0.5rem;
+    padding-left: 0.2rem;
+    padding-right: 0.45rem;
   }
   
   .nav-logo-text {

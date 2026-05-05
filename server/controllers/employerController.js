@@ -29,7 +29,7 @@ exports.getEmployerJobs = async (req, res) => {
 exports.createJob = async (req, res) => {
   try {
     const employerId = getUserId(req);
-    const { title, location, description, salary, requirements, jobType, slots } = req.body;
+    const { title, location, description, salary, requirements, jobType, slots, applicationDeadline } = req.body;
 
     if (!title || !location || !description) {
       return res.status(400).json({ message: "title, location, and description are required" });
@@ -43,6 +43,7 @@ exports.createJob = async (req, res) => {
       requirements: requirements ? String(requirements).trim() : "",
       jobType: jobType || "Full-time",
       slots: Number(slots) > 0 ? Number(slots) : 1,
+      applicationDeadline: applicationDeadline ? new Date(applicationDeadline) : null,
       employer: employerId,
       status: "active",
       isActive: true,
@@ -69,7 +70,7 @@ exports.updateJob = async (req, res) => {
       return res.status(403).json({ message: "You can only update your own job" });
     }
 
-    const allowedFields = ["title", "location", "description", "salary", "requirements", "jobType", "slots", "status"];
+    const allowedFields = ["title", "location", "description", "salary", "requirements", "jobType", "slots", "status", "applicationDeadline"];
     allowedFields.forEach((field) => {
       if (req.body[field] !== undefined) {
         job[field] = req.body[field];

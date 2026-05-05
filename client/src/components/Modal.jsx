@@ -6,29 +6,29 @@ export default function Modal({ isOpen, onClose, job }) {
 
   return (
     <div
-      className="job-preview-overlay"
+      className="job-dialog-overlay"
       onMouseDown={(event) => {
         if (event.target === event.currentTarget) {
           onClose();
         }
       }}
     >
-      <div className="job-preview-card" role="dialog" aria-modal="true" aria-label="Job details">
-        <button className="job-preview-close" onClick={onClose} type="button" aria-label="Close">
+      <div className="job-dialog-card" role="dialog" aria-modal="true" aria-label="Job details">
+        <button className="job-dialog-close" onClick={onClose} type="button" aria-label="Close">
           x
         </button>
 
-        <div className="job-preview-hero">
+        <div className="job-dialog-hero">
           <h2>{job.title}</h2>
-          <span className="job-preview-status">Open</span>
+          <span className="job-dialog-status">Open</span>
         </div>
 
-        <div className="job-preview-meta">
-          <span className="job-preview-chip">Location: {job.location || "Not specified"}</span>
-          <span className="job-preview-chip">Salary: {job.salary || "Salary negotiable"}</span>
+        <div className="job-dialog-meta">
+          <span className="job-dialog-chip">Location: {job.location || "Not specified"}</span>
+          <span className="job-dialog-chip">Salary: {job.salary || "Salary negotiable"}</span>
         </div>
 
-        <div className="job-preview-section">
+        <div className="job-dialog-section">
           <h3>About this job</h3>
           <p>{job.description || "No description provided."}</p>
         </div>

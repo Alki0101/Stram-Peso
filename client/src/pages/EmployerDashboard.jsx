@@ -13,6 +13,7 @@ const defaultJobForm = {
   slots: 1,
   description: "",
   requirements: "",
+  applicationDeadline: "",
 };
 
 const statusClass = (value) => {
@@ -185,6 +186,7 @@ export default function EmployerDashboard() {
       slots: job.slots || 1,
       description: job.description || "",
       requirements: job.requirements || "",
+      applicationDeadline: job.applicationDeadline ? String(job.applicationDeadline).slice(0, 10) : "",
     });
     setIsJobModalOpen(true);
   };
@@ -607,6 +609,15 @@ export default function EmployerDashboard() {
                   rows="3"
                 />
               </label>
+
+                  <label>
+                    Application Deadline
+                    <input
+                      type="date"
+                      value={jobForm.applicationDeadline}
+                      onChange={(event) => setJobForm((prev) => ({ ...prev, applicationDeadline: event.target.value }))}
+                    />
+                  </label>
 
               <div className="job-modal-actions full-width">
                 <button type="button" className="outline-btn" onClick={() => setIsJobModalOpen(false)} disabled={isSavingJob}>

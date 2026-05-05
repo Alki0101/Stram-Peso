@@ -3,19 +3,24 @@ const JobApplication = require("../models/JobApplication");
 const User = require("../models/User");
 const Message = require("../models/Message");
 const { ensureConversationBetweenUsers } = require("./messageController");
+const { getHomepageJobsPayload, getApplicationCountMap } = require("../utils/jobDisplay");
 
 exports.createJob = async (req, res) => {
   try {
-    const { title, description, location, salary } = req.body;
+    const { title, description, location, salary, requirements, jobType, slots, applicationDeadline } = req.body;
     if (!title || !description || !location) {
       return res.status(400).json({ message: "Title, description, and location are required" });
     }
 
     const job = await JobVacancy.create({
-      title,
-      description,
-      location,
-      salary,
+      title: String(title).trim(),
+      description: String(description).trim(),
+      location: String(location).trim(),
+      salary: salary ? String(salary).trim() : "",
+      requirements: requirements ? String(requirements).trim() : "",
+      jobType: jobType || "Full-time",
+      slots: Number(slots) > 0 ? Number(slots) : 1,
+      applicationDeadline: applicationDeadline ? new Date(applicationDeadline) : null,
       employer: req.user.id,
     });
 
@@ -30,7 +35,27 @@ exports.getJobs = async (req, res) => {
     const jobs = await JobVacancy.find({ isActive: true })
       .populate("employer", "name email role companyName industry companySize website businessAddress companyDescription verificationStatus phone")
       .sort({ createdAt: -1 });
-    res.json(jobs);
+
+    const countMap = await getApplicationCountMap(jobs.map((job) => job._id));
+    const jobsWithCounts = jobs.map((job) => ({
+      ...job.toObject(),
+      applicationCount: Number(countMap[String(job._id)] || 0),
+    }));
+
+    res.json(jobsWithCounts);
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+};
+
+exports.getHomepageJobs = async (req, res) => {
+  try {
+    const jobs = await JobVacancy.find({ isActive: true, status: { $ne: "closed" } })
+      .populate("employer", "name email role companyName industry companySize website businessAddress companyDescription verificationStatus phone")
+      .sort({ createdAt: -1 });
+
+    const featuredJobs = await getHomepageJobsPayload(jobs, 4);
+    res.json(featuredJobs);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -38,9 +63,15 @@ exports.getJobs = async (req, res) => {
 
 exports.getJobById = async (req, res) => {
   try {
-    const job = await JobVacancy.findById(req.params.id).populate("employer", "name email role companyName industry companySize website businessAddress companyDescription verificationStatus phone");
+    const job = await JobVacancy.findById(req.params.id)
+      .populate("employer", "name email role companyName industry companySize website businessAddress companyDescription verificationStatus phone");
     if (!job) return res.status(404).json({ message: "Job not found" });
-    res.json(job);
+
+    const countMap = await getApplicationCountMap([job._id]);
+    res.json({
+      ...job.toObject(),
+      applicationCount: Number(countMap[String(job._id)] || 0),
+    });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -60,6 +91,10 @@ exports.updateJob = async (req, res) => {
       description: req.body.description || job.description,
       location: req.body.location || job.location,
       salary: req.body.salary || job.salary,
+      requirements: typeof req.body.requirements === "string" ? req.body.requirements : job.requirements,
+      jobType: req.body.jobType || job.jobType,
+      slots: Number(req.body.slots) > 0 ? Number(req.body.slots) : job.slots,
+      applicationDeadline: req.body.applicationDeadline ? new Date(req.body.applicationDeadline) : job.applicationDeadline,
       isActive: typeof req.body.isActive === "boolean" ? req.body.isActive : job.isActive,
     };
 

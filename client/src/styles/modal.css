@@ -1,5 +1,5 @@
-/* Job preview modal styles */
-.job-preview-overlay {
+/* Job detail modal styles */
+.job-dialog-overlay {
   position: fixed;
   inset: 0;
   background: rgba(0, 0, 0, 0.58);
@@ -9,10 +9,10 @@
   justify-content: center;
   padding: 1rem;
   z-index: 1100;
-  animation: jobPreviewOverlayIn 220ms ease-out;
+  animation: jobDialogOverlayIn 220ms ease-out;
 }
 
-.job-preview-card {
+.job-dialog-card {
   width: 100%;
   max-width: 640px;
   background: #ffffff;
@@ -21,11 +21,13 @@
   box-shadow: 0 18px 42px rgba(0, 0, 0, 0.2);
   padding: 1rem 1.25rem 1.25rem;
   position: relative;
-  animation: jobPreviewCardIn 260ms cubic-bezier(0.22, 1, 0.36, 1);
+  opacity: 1;
+  transform: none;
+  animation: jobDialogCardIn 260ms cubic-bezier(0.22, 1, 0.36, 1);
   transform-origin: top center;
 }
 
-@keyframes jobPreviewOverlayIn {
+@keyframes jobDialogOverlayIn {
   from {
     opacity: 0;
   }
@@ -34,7 +36,7 @@
   }
 }
 
-@keyframes jobPreviewCardIn {
+@keyframes jobDialogCardIn {
   from {
     opacity: 0;
     transform: translateY(14px) scale(0.97);
@@ -46,13 +48,13 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .job-preview-overlay,
-  .job-preview-card {
+  .job-dialog-overlay,
+  .job-dialog-card {
     animation: none;
   }
 }
 
-.job-preview-close {
+.job-dialog-close {
   position: absolute;
   top: 12px;
   right: 12px;
@@ -67,11 +69,11 @@
   cursor: pointer;
 }
 
-.job-preview-close:hover {
+.job-dialog-close:hover {
   background: #e6e6e6;
 }
 
-.job-preview-hero {
+.job-dialog-hero {
   margin-top: 0.6rem;
   background: linear-gradient(90deg, #1a5c2a 0%, #2e7d42 100%);
   border-radius: 10px;
@@ -82,14 +84,14 @@
   gap: 0.75rem;
 }
 
-.job-preview-hero h2 {
+.job-dialog-hero h2 {
   margin: 0;
   color: #ffffff;
   font-size: 1.45rem;
   font-weight: 800;
 }
 
-.job-preview-status {
+.job-dialog-status {
   background: #e6f4ea;
   color: #1a5c2a;
   border: 1px solid #1a5c2a;
@@ -100,14 +102,14 @@
   white-space: nowrap;
 }
 
-.job-preview-meta {
+.job-dialog-meta {
   margin-top: 0.9rem;
   display: flex;
   gap: 0.6rem;
   flex-wrap: wrap;
 }
 
-.job-preview-chip {
+.job-dialog-chip {
   border: 1px solid #c5dacb;
   border-radius: 999px;
   background: #f8fbf9;
@@ -117,37 +119,37 @@
   padding: 0.32rem 0.75rem;
 }
 
-.job-preview-section {
+.job-dialog-section {
   margin-top: 1rem;
   background: #f5f5f5;
   border-radius: 10px;
   padding: 0.9rem 1rem;
 }
 
-.job-preview-section h3 {
+.job-dialog-section h3 {
   margin: 0 0 0.5rem;
   font-size: 1rem;
   color: #1a5c2a;
 }
 
-.job-preview-section p {
+.job-dialog-section p {
   margin: 0;
   color: #555;
   line-height: 1.6;
 }
 
 @media (max-width: 640px) {
-  .job-preview-card {
+  .job-dialog-card {
     padding: 0.9rem 0.9rem 1rem;
   }
 
-  .job-preview-hero {
+  .job-dialog-hero {
     margin-top: 0.8rem;
     flex-direction: column;
     align-items: flex-start;
   }
 
-  .job-preview-hero h2 {
+  .job-dialog-hero h2 {
     font-size: 1.2rem;
   }
 }

@@ -2,7 +2,7 @@ import { useContext } from "react";
 import { Navigate, useLocation } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
 
-const normalizeRole = (role) => (role === "employee" ? "resident" : role);
+const normalizeRole = (role) => (role === "employee" || role === "jobseeker" ? "resident" : role);
 
 const routeNeedsCompletedOnboarding = (role, pathname) => {
   if (role === "resident") {

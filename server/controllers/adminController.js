@@ -3,6 +3,7 @@ const JobVacancy = require("../models/JobVacancy");
 const JobApplication = require("../models/JobApplication");
 const Conversation = require("../models/Conversation");
 const Message = require("../models/Message");
+const { getApplicationCountMap, normalizeFeaturedOrdering } = require("../utils/jobDisplay");
 
 const monthBuckets = () => Array.from({ length: 12 }, () => 0);
 
@@ -133,6 +134,83 @@ exports.getAllUsers = async (req, res) => {
     });
   } catch (error) {
     return res.status(500).json({ message: error.message || "Failed to fetch users" });
+  }
+};
+
+exports.getHomepageJobManagement = async (req, res) => {
+  try {
+    const jobs = await JobVacancy.find({ isActive: true, status: { $ne: "closed" } })
+      .populate("employer", "name email companyName verificationStatus")
+      .sort({ createdAt: -1 });
+
+    const countMap = await getApplicationCountMap(jobs.map((job) => job._id));
+    const jobsWithCounts = jobs.map((job) => ({
+      ...job.toObject(),
+      applicationCount: Number(countMap[String(job._id)] || 0),
+    }));
+
+    const rankedJobs = [...jobsWithCounts].sort((left, right) => {
+      if (right.applicationCount !== left.applicationCount) {
+        return right.applicationCount - left.applicationCount;
+      }
+
+      return new Date(right.createdAt || 0) - new Date(left.createdAt || 0);
+    });
+
+    return res.json({
+      jobs: jobsWithCounts,
+      rankedJobs,
+      featuredCount: jobsWithCounts.filter((job) => job.isFeatured).length,
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message || "Failed to fetch homepage job management data" });
+  }
+};
+
+exports.toggleHomepageFeature = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const desiredFeatured = Boolean(req.body.isFeatured);
+
+    const job = await JobVacancy.findById(id);
+    if (!job) {
+      return res.status(404).json({ message: "Job not found" });
+    }
+
+    if (!job.isActive || job.status === "closed") {
+      return res.status(400).json({ message: "Only active jobs can be featured on the homepage" });
+    }
+
+    if (desiredFeatured) {
+      if (!job.isFeatured) {
+        const featuredCount = await JobVacancy.countDocuments({ isFeatured: true });
+        if (featuredCount >= 4) {
+          return res.status(400).json({ message: "You can only feature up to 4 jobs on the homepage" });
+        }
+
+        const featuredJobs = await JobVacancy.find({ isFeatured: true }).sort({ featuredOrder: 1, createdAt: -1 });
+        const nextOrder = featuredJobs.length + 1;
+        job.isFeatured = true;
+        job.featuredOrder = nextOrder;
+      }
+    } else {
+      job.isFeatured = false;
+      job.featuredOrder = null;
+    }
+
+    job.updatedAt = new Date();
+    await job.save();
+
+    const featuredJobs = await JobVacancy.find({ isFeatured: true }).sort({ featuredOrder: 1, createdAt: -1 });
+    await normalizeFeaturedOrdering(featuredJobs);
+
+    const updatedJob = await JobVacancy.findById(id).populate("employer", "name email companyName verificationStatus");
+    return res.json({
+      message: desiredFeatured ? "Job featured on homepage" : "Job removed from homepage featured list",
+      job: updatedJob,
+    });
+  } catch (error) {
+    return res.status(500).json({ message: error.message || "Failed to update homepage feature" });
   }
 };
 

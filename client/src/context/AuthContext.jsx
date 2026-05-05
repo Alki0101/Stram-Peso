@@ -2,7 +2,7 @@ import { createContext, useState } from "react";
 
 const AuthContext = createContext();
 
-const normalizeRole = (role) => (role === "employee" ? "resident" : role);
+const normalizeRole = (role) => (role === "employee" || role === "jobseeker" ? "resident" : role);
 
 const normalizeUser = (user) => {
   if (!user) return user;
